@@ -565,13 +565,83 @@
     <script>
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyJ8qcAPDPFRkL8W_qpHBYrRnoDZrA0_kZ9XEbZjBUmlaXUizYqTc_Ah4kfYCFBI6MN/exec";
         const GAME_STATE_KEY = 'women-month-crossword-session';
+        const MIN_BOARD_SIZE = 12;
 
-        const PUZZLE_TEMPLATE = [
-            { answer: 'RESILIENT', clue: 'A trait of a strong Filipina leader', direction: 'down', row: 0, col: 6 },
-            { answer: 'FEMINISM', clue: 'Deep respect for women in Filipino culture', direction: 'down', row: 0, col: 8 },
-            { answer: 'BABAYLAN', clue: 'Pre-colonial Filipina spiritual leader', direction: 'across', row: 4, col: 1 },
-            { answer: 'EQUALITY', clue: 'Equality between men and women', direction: 'across', row: 8, col: 0 }
+        const PUZZLE_LAYOUTS = [
+            {
+                id: 'layout-a',
+                words: [
+                    { answer: 'BABAYLAN', clue: 'Pre-colonial Filipina spiritual leader', direction: 'across', row: 4, col: 1 },
+                    { answer: 'RESILIENT', clue: 'A trait of a strong Filipina leader', direction: 'down', row: 0, col: 6 },
+                    { answer: 'EQUALITY', clue: 'Equality between men and women', direction: 'across', row: 8, col: 0 },
+                    { answer: 'FEMINISM', clue: 'Deep respect for women in Filipino culture', direction: 'down', row: 0, col: 8 }
+                ]
+            },
+            {
+                id: 'layout-b',
+                words: [
+                    { answer: 'BABAYLAN', clue: 'Pre-colonial Filipina spiritual leader', direction: 'across', row: 7, col: 0 },
+                    { answer: 'RESILIENT', clue: 'A trait of a strong Filipina leader', direction: 'down', row: 0, col: 7 },
+                    { answer: 'EQUALITY', clue: 'Equality between men and women', direction: 'down', row: 4, col: 1 },
+                    { answer: 'FEMINISM', clue: 'Deep respect for women in Filipino culture', direction: 'across', row: 3, col: 4 }
+                ]
+            },
+            {
+                id: 'layout-c',
+                words: [
+                    { answer: 'BABAYLAN', clue: 'Pre-colonial Filipina spiritual leader', direction: 'down', row: 1, col: 4 },
+                    { answer: 'RESILIENT', clue: 'A trait of a strong Filipina leader', direction: 'across', row: 6, col: 0 },
+                    { answer: 'EQUALITY', clue: 'Equality between men and women', direction: 'down', row: 0, col: 8 },
+                    { answer: 'FEMINISM', clue: 'Deep respect for women in Filipino culture', direction: 'across', row: 8, col: 0 }
+                ]
+            },
+            {
+                id: 'layout-d',
+                words: [
+                    { answer: 'BABAYLAN', clue: 'Pre-colonial Filipina spiritual leader', direction: 'down', row: 0, col: 4 },
+                    { answer: 'RESILIENT', clue: 'A trait of a strong Filipina leader', direction: 'across', row: 5, col: 0 },
+                    { answer: 'EQUALITY', clue: 'Equality between men and women', direction: 'across', row: 1, col: 1 },
+                    { answer: 'FEMINISM', clue: 'Deep respect for women in Filipino culture', direction: 'down', row: 4, col: 1 }
+                ]
+            },
+            {
+                id: 'layout-e',
+                words: [
+                    { answer: 'BABAYLAN', clue: 'Pre-colonial Filipina spiritual leader', direction: 'across', row: 7, col: 4 },
+                    { answer: 'RESILIENT', clue: 'A trait of a strong Filipina leader', direction: 'down', row: 0, col: 11 },
+                    { answer: 'EQUALITY', clue: 'Equality between men and women', direction: 'down', row: 4, col: 5 },
+                    { answer: 'FEMINISM', clue: 'Deep respect for women in Filipino culture', direction: 'across', row: 9, col: 0 }
+                ]
+            },
+            {
+                id: 'layout-f',
+                words: [
+                    { answer: 'BABAYLAN', clue: 'Pre-colonial Filipina spiritual leader', direction: 'down', row: 0, col: 7 },
+                    { answer: 'RESILIENT', clue: 'A trait of a strong Filipina leader', direction: 'across', row: 7, col: 0 },
+                    { answer: 'EQUALITY', clue: 'Equality between men and women', direction: 'across', row: 1, col: 4 },
+                    { answer: 'FEMINISM', clue: 'Deep respect for women in Filipino culture', direction: 'down', row: 4, col: 3 }
+                ]
+            },
+            {
+                id: 'layout-g',
+                words: [
+                    { answer: 'BABAYLAN', clue: 'Pre-colonial Filipina spiritual leader', direction: 'down', row: 0, col: 7 },
+                    { answer: 'RESILIENT', clue: 'A trait of a strong Filipina leader', direction: 'across', row: 7, col: 0 },
+                    { answer: 'EQUALITY', clue: 'Equality between men and women', direction: 'across', row: 1, col: 4 },
+                    { answer: 'FEMINISM', clue: 'Deep respect for women in Filipino culture', direction: 'down', row: 4, col: 5 }
+                ]
+            },
+            {
+                id: 'layout-h',
+                words: [
+                    { answer: 'BABAYLAN', clue: 'Pre-colonial Filipina spiritual leader', direction: 'down', row: 4, col: 7 },
+                    { answer: 'RESILIENT', clue: 'A trait of a strong Filipina leader', direction: 'across', row: 11, col: 0 },
+                    { answer: 'EQUALITY', clue: 'Equality between men and women', direction: 'across', row: 5, col: 4 },
+                    { answer: 'FEMINISM', clue: 'Deep respect for women in Filipino culture', direction: 'down', row: 0, col: 9 }
+                ]
+            }
         ];
+        const DEFAULT_PUZZLE_LAYOUT_ID = PUZZLE_LAYOUTS[0].id;
 
         const introScreen = document.getElementById('intro-screen');
         const gameScreen = document.getElementById('game-screen');
@@ -619,8 +689,10 @@
         let isParticipantEmailVerified = false;
         let participantEmailCheckTimeout = null;
         let participantEmailCheckToken = 0;
+        let currentLayoutId = DEFAULT_PUZZLE_LAYOUT_ID;
+        let lastStartedLayoutId = '';
 
-        preparePuzzle();
+        selectPuzzleLayout(DEFAULT_PUZZLE_LAYOUT_ID);
         totalCount.textContent = puzzleWords.length;
         activeCellKey = getDefaultActiveKey();
         renderGame({ focus: false });
@@ -660,20 +732,12 @@
             currentUser.name = participantName;
             currentUser.email = participantEmail;
             currentUser.office = participantOffice;
+            const layoutId = getRandomPuzzleLayoutId(lastStartedLayoutId);
+            lastStartedLayoutId = layoutId;
+            selectPuzzleLayout(layoutId);
 
             syncUserDisplay();
-
-            initGame();
-            window.scrollTo(0, 0);
-            introScreen.classList.add('exit');
-            saveGameState();
-
-            setTimeout(() => {
-                introScreen.classList.remove('active', 'exit');
-                gameScreen.classList.add('active');
-                startTimer();
-                focusActiveCell(true);
-            }, 500);
+            launchGame();
         });
 
         function normalizeParticipantEmail(email) {
@@ -859,8 +923,47 @@
             document.getElementById('user-initial').textContent = (currentUser.name || '?').charAt(0).toUpperCase();
         }
 
-        function preparePuzzle() {
-            puzzleWords = PUZZLE_TEMPLATE.map((item, index) => ({
+        function getPuzzleLayoutById(layoutId) {
+            return PUZZLE_LAYOUTS.find(layout => layout.id === layoutId) || PUZZLE_LAYOUTS[0];
+        }
+
+        function getRandomPuzzleLayoutId(excludeLayoutId = '') {
+            const eligibleLayouts = PUZZLE_LAYOUTS.filter(layout => layout.id !== excludeLayoutId);
+            const layoutPool = eligibleLayouts.length ? eligibleLayouts : PUZZLE_LAYOUTS;
+
+            if (window.crypto?.getRandomValues) {
+                const values = new Uint32Array(1);
+                window.crypto.getRandomValues(values);
+                return layoutPool[values[0] % layoutPool.length].id;
+            }
+
+            return layoutPool[Math.floor(Math.random() * layoutPool.length)].id;
+        }
+
+        function selectPuzzleLayout(layoutId) {
+            currentLayoutId = getPuzzleLayoutById(layoutId).id;
+            preparePuzzle(currentLayoutId);
+            totalCount.textContent = puzzleWords.length;
+        }
+
+        function launchGame() {
+            initGame();
+            window.scrollTo(0, 0);
+            introScreen.classList.add('exit');
+            saveGameState();
+
+            setTimeout(() => {
+                introScreen.classList.remove('active', 'exit');
+                gameScreen.classList.add('active');
+                startTimer();
+                focusActiveCell(true);
+            }, 500);
+        }
+
+        function preparePuzzle(layoutId = currentLayoutId) {
+            const activeLayout = getPuzzleLayoutById(layoutId);
+
+            puzzleWords = activeLayout.words.map((item, index) => ({
                 ...item,
                 id: index,
                 number: null,
@@ -894,8 +997,8 @@
                 }
             });
 
-            boardRows = maxRow + 1;
-            boardCols = maxCol + 1;
+            boardRows = Math.max(MIN_BOARD_SIZE, maxRow + 1);
+            boardCols = Math.max(MIN_BOARD_SIZE, maxCol + 1);
 
             let clueNumber = 1;
             for (let row = 0; row < boardRows; row++) {
@@ -981,6 +1084,11 @@
             timerDisplay.textContent = `${minutes}:${seconds}`;
         }
 
+        function getGridSignature() {
+            const activeCells = Array.from(puzzleCells.keys()).sort().join('|');
+            return `${currentLayoutId}:${boardRows}x${boardCols}:${activeCells}`;
+        }
+
         function saveGameState() {
             if (!currentUser.name || !currentUser.email || !currentUser.office || hasCompletedPuzzle) return;
 
@@ -989,6 +1097,7 @@
 
             const state = {
                 user: currentUser,
+                layoutId: currentLayoutId,
                 userEntries,
                 activeCellKey,
                 activeDirection,
@@ -1019,6 +1128,9 @@
                     email: String(state.user.email),
                     office: String(state.user.office)
                 };
+                const restoredLayoutId = typeof state.layoutId === 'string' ? state.layoutId : DEFAULT_PUZZLE_LAYOUT_ID;
+                lastStartedLayoutId = restoredLayoutId;
+                selectPuzzleLayout(restoredLayoutId);
 
                 document.getElementById('user-name').value = currentUser.name;
                 emailInput.value = currentUser.email;
@@ -1184,9 +1296,9 @@
         }
 
         function renderGrid() {
-            const expectedCellCount = boardRows * boardCols;
+            const gridSignature = getGridSignature();
 
-            if (gridContainer.childElementCount !== expectedCellCount) {
+            if (gridContainer.dataset.gridSignature !== gridSignature) {
                 buildGridStructure();
             }
 
@@ -1196,6 +1308,7 @@
         function buildGridStructure() {
             gridContainer.innerHTML = '';
             gridContainer.style.gridTemplateColumns = `repeat(${boardCols}, minmax(0, 1fr))`;
+            gridContainer.dataset.gridSignature = getGridSignature();
 
             for (let row = 0; row < boardRows; row++) {
                 for (let col = 0; col < boardCols; col++) {
@@ -1485,8 +1598,9 @@
 
                 setTimeout(() => {
                     document.getElementById('final-time').textContent = timerDisplay.textContent;
-                    resetStatusBox();
                     modal.classList.replace('hidden', 'flex');
+
+                    resetStatusBox();
                     sendToGoogleSheet();
                 }, 350);
             }
@@ -1499,6 +1613,7 @@
             timerDisplay.textContent = '00:00';
             elapsedSeconds = 0;
             startTime = null;
+            selectPuzzleLayout(DEFAULT_PUZZLE_LAYOUT_ID);
             activeDirection = 'across';
             activeCellKey = getDefaultActiveKey();
             userEntries = {};
