@@ -632,7 +632,7 @@
             const participantOffice = officeInput.value.trim();
 
             if (isCheckingParticipantName) {
-                setNameCheckStatus('checking', 'Please wait while we check participant name...');
+                setNameCheckStatus('checking', 'Please wait while we are checking the participant name...');
                 nameInput.focus({ preventScroll: true });
                 return;
             }
@@ -644,7 +644,8 @@
             }
 
             if (!isParticipantNameVerified) {
-                setNameCheckStatus('error', 'Please wait for the realtime name verification before starting.');
+                setNameCheckStatus('checking', 'Please wait while we are checking the participant name...');
+                setNameCheckStatus('error', '');
                 nameInput.focus({ preventScroll: true });
                 return;
             }
@@ -735,7 +736,7 @@
             }
 
             isCheckingParticipantName = true;
-            setNameCheckStatus('checking', 'Please wait while we check participant name...');
+            setNameCheckStatus('checking', 'Please wait while we are checking the participant name...');
             updateStartButtonState();
 
             participantCheckTimeout = setTimeout(() => {
@@ -773,7 +774,7 @@
             isCheckingParticipantName = true;
             isDuplicateParticipantName = false;
             isParticipantNameVerified = false;
-            setNameCheckStatus('checking', 'Please wait while we are checking participant name...');
+            setNameCheckStatus('checking', 'Please wait while we are checking the participant name...');
             updateStartButtonState();
 
             try {
