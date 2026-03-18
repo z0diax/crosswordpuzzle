@@ -435,21 +435,12 @@
                 <form id="onboarding-form" class="space-y-6">
                     <div>
                         <label class="block text-sm font-semibold text-[var(--wm-plum)] mb-2">Full Name</label>
-                        <input required type="text" id="user-name" placeholder="Enter your name" class="theme-input w-full px-4 py-3 rounded-2xl outline-none transition">
+                        <input required type="text" id="user-name" placeholder="Juan Dela Cruz" class="theme-input w-full px-4 py-3 rounded-2xl outline-none transition">
                     </div>
 
                     <div>
                         <label class="block text-sm font-semibold text-[var(--wm-plum)] mb-2">Office</label>
-                        <div class="relative">
-                            <select required id="user-office" class="theme-input w-full px-4 py-3 rounded-2xl outline-none transition appearance-none">
-                                <option value="" disabled selected>Select your office</option>
-                            </select>
-                            <div class="absolute inset-y-0 right-0 flex items-center px-4 pointer-events-none text-[var(--wm-muted)]">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path d="M19 9l-7 7-7-7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
-                                </svg>
-                            </div>
-                        </div>
+                        <input required type="text" id="user-office" placeholder="e.g. HRMDO, CAO, CIO" class="theme-input w-full px-4 py-3 rounded-2xl outline-none transition">
                     </div>
 
                     <button type="submit" id="start-btn" class="theme-button w-full py-4 rounded-2xl font-bold text-lg transform transition active:scale-95">
@@ -569,7 +560,6 @@
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyhlFfEPehfbqifdcHhKkQpEOQv3gzj3y6YUWyTtxXP-w69tzcK9h8A9jOvZdtuQQ33PA/exec";
         const GAME_STATE_KEY = 'women-month-crossword-session';
 
-        const OFFICES = ['CMO', 'CMO - CARPOOL', 'CMO - YOUTH', 'CMO - NORTH', 'CMO - SUPPLY', 'CADMO', 'VMO', 'SP', 'CPDO', 'CLGOO', 'CTO', 'CAO', 'CASSO', 'CBO', 'HRMDO', 'CCRO', 'CDO', 'CHO', 'TCH', 'CPO', 'CSWDO', 'CEO', 'OBO', 'CGSO', 'CENRO', 'CAGRIO', 'CVO', 'EED', 'CIAS', 'TOMECO', 'CIO', 'CHCDO', 'CDRRMO', 'CCDLAO', 'CTOO', 'CLO', 'CMISO', 'CLEP', 'SPORTS', 'BPLD', 'FLET', 'TACRU', 'CNO', 'TNSH', 'PDAO', 'OSCA', 'TCPO', 'PESO', 'TCCC', 'TNBT', 'BAC', 'DILG', 'COMELEC', 'COA'];
         const PUZZLE_TEMPLATE = [
             { answer: 'RESILIENT', clue: 'A trait of a strong Filipina leader', direction: 'down', row: 0, col: 6 },
             { answer: 'FEMINISM', clue: 'Deep respect for women in Filipino culture', direction: 'down', row: 0, col: 8 },
@@ -579,7 +569,7 @@
 
         const introScreen = document.getElementById('intro-screen');
         const gameScreen = document.getElementById('game-screen');
-        const officeSelect = document.getElementById('user-office');
+        const officeInput = document.getElementById('user-office');
         const gridContainer = document.getElementById('grid-container');
         const modal = document.getElementById('modal');
         const modalIconShell = document.getElementById('modal-icon-shell');
@@ -615,10 +605,6 @@
         let activeDirection = 'across';
         let hasCompletedPuzzle = false;
 
-        OFFICES.sort().forEach(office => {
-            officeSelect.add(new Option(office, office));
-        });
-
         preparePuzzle();
         totalCount.textContent = puzzleWords.length;
         activeCellKey = getDefaultActiveKey();
@@ -631,7 +617,7 @@
             event.preventDefault();
 
             currentUser.name = document.getElementById('user-name').value.trim();
-            currentUser.office = officeSelect.value;
+            currentUser.office = officeInput.value.trim();
 
             syncUserDisplay();
 
@@ -815,7 +801,7 @@
                 };
 
                 document.getElementById('user-name').value = currentUser.name;
-                officeSelect.value = currentUser.office;
+                officeInput.value = currentUser.office;
                 syncUserDisplay();
 
                 userEntries = {};
@@ -870,7 +856,7 @@
                 modalIconShell.className = 'modal-icon-shell w-16 h-16 bg-[rgba(246,200,95,0.22)] text-[var(--wm-plum)] rounded-full flex items-center justify-center mx-auto mb-4';
                 modalBadge.textContent = 'Submitting Entry';
                 modalTitle.textContent = 'Please wait';
-                modalCongrats.textContent = 'Please wait while your answer is being sent to the registry.';
+                modalCongrats.textContent = 'Please wait while your answer is being sent to the HRMDO.';
             } else if (isSuccess) {
                 modalIconShell.className = 'modal-icon-shell w-16 h-16 bg-[rgba(246,200,95,0.22)] text-[var(--wm-plum)] rounded-full flex items-center justify-center mx-auto mb-4';
                 modalBadge.textContent = 'Celebration Complete';
@@ -900,7 +886,7 @@
         async function sendToGoogleSheet() {
             if (SCRIPT_URL === "REPLACE_WITH_YOUR_APPS_SCRIPT_URL") {
                 setModalState('success');
-                submitStatusText.textContent = 'Answer saved locally. Thanks for Participating.';
+                submitStatusText.textContent = 'Answer saved locally. Thankyou for Participating.';
                 submitStatusLoader.classList.add('hidden');
                 submitStatus.classList.remove('status-muted', 'status-error');
                 submitStatus.classList.add('status-success');
@@ -925,7 +911,7 @@
                 });
 
                 setModalState('success');
-                submitStatusText.textContent = 'Answer sent successfully. You may now return home.';
+                submitStatusText.textContent = 'Answer sent successfully. Thankyou for Participating.';
                 submitStatusLoader.classList.add('hidden');
                 submitStatus.classList.remove('status-muted', 'status-error');
                 submitStatus.classList.add('status-success');
@@ -966,10 +952,18 @@
         }
 
         function renderGrid() {
+            const expectedCellCount = boardRows * boardCols;
+
+            if (gridContainer.childElementCount !== expectedCellCount) {
+                buildGridStructure();
+            }
+
+            syncGridState();
+        }
+
+        function buildGridStructure() {
             gridContainer.innerHTML = '';
             gridContainer.style.gridTemplateColumns = `repeat(${boardCols}, minmax(0, 1fr))`;
-
-            const activeWord = getActiveWord();
 
             for (let row = 0; row < boardRows; row++) {
                 for (let col = 0; col < boardCols; col++) {
@@ -984,15 +978,9 @@
                         continue;
                     }
 
-                    const value = userEntries[key] || '';
                     const wrapper = document.createElement('div');
                     wrapper.className = 'crossword-cell';
-
-                    if (value) wrapper.classList.add('filled');
-                    if (value === cell.solution) wrapper.classList.add('correct');
-                    if (isCellInWord(key, activeWord)) wrapper.classList.add('active-word');
-                    if (key === activeCellKey) wrapper.classList.add('active-cell');
-                    if (cell.words.some(id => solvedWords.has(id))) wrapper.classList.add('solved');
+                    wrapper.dataset.cellKey = key;
 
                     if (cell.number) {
                         const number = document.createElement('span');
@@ -1005,9 +993,9 @@
                     input.type = 'text';
                     input.maxLength = 1;
                     input.className = 'crossword-input';
-                    input.value = value;
                     input.dataset.key = key;
                     input.autocomplete = 'off';
+                    input.setAttribute('autocorrect', 'off');
                     input.autocapitalize = 'characters';
                     input.spellcheck = false;
                     input.inputMode = 'text';
@@ -1022,6 +1010,29 @@
                     gridContainer.appendChild(wrapper);
                 }
             }
+        }
+
+        function syncGridState() {
+            const activeWord = getActiveWord();
+
+            puzzleCells.forEach((cell, key) => {
+                const wrapper = gridContainer.querySelector(`[data-cell-key="${key}"]`);
+                const input = wrapper?.querySelector('.crossword-input');
+                if (!wrapper || !input) return;
+
+                const value = userEntries[key] || '';
+                wrapper.className = 'crossword-cell';
+
+                if (value) wrapper.classList.add('filled');
+                if (value === cell.solution) wrapper.classList.add('correct');
+                if (isCellInWord(key, activeWord)) wrapper.classList.add('active-word');
+                if (key === activeCellKey) wrapper.classList.add('active-cell');
+                if (cell.words.some(id => solvedWords.has(id))) wrapper.classList.add('solved');
+
+                if (input.value !== value) {
+                    input.value = value;
+                }
+            });
         }
 
         function renderClues() {
@@ -1087,8 +1098,14 @@
             requestAnimationFrame(() => {
                 const input = gridContainer.querySelector(`input[data-key="${activeCellKey}"]`);
                 if (!input) return;
-                input.focus({ preventScroll: true });
-                if (selectContents) input.select();
+
+                if (document.activeElement !== input) {
+                    input.focus({ preventScroll: true });
+                }
+
+                if (selectContents) {
+                    input.select();
+                }
             });
         }
 
