@@ -436,6 +436,7 @@
                     <div>
                         <label class="block text-sm font-semibold text-[var(--wm-plum)] mb-2">Full Name</label>
                         <input required type="text" id="user-name" placeholder="Juan Dela Cruz" class="theme-input w-full px-4 py-3 rounded-2xl outline-none transition">
+                        <p id="name-check-status" class="hidden mt-2 rounded-xl border px-3 py-2 text-xs font-medium"></p>
                     </div>
 
                     <div>
@@ -557,7 +558,7 @@
     </div>
 
     <script>
-        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyhlFfEPehfbqifdcHhKkQpEOQv3gzj3y6YUWyTtxXP-w69tzcK9h8A9jOvZdtuQQ33PA/exec";
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyUPfV8lkavlV57Sz65kCc9DSn8l-YMwSqHG8Uy5_-GYSccuSB_CM6YXaaVrQpvFYPW/exec";
         const GAME_STATE_KEY = 'women-month-crossword-session';
 
         const PUZZLE_TEMPLATE = [
@@ -569,6 +570,8 @@
 
         const introScreen = document.getElementById('intro-screen');
         const gameScreen = document.getElementById('game-screen');
+        const nameInput = document.getElementById('user-name');
+        const nameCheckStatus = document.getElementById('name-check-status');
         const officeInput = document.getElementById('user-office');
         const gridContainer = document.getElementById('grid-container');
         const modal = document.getElementById('modal');
@@ -586,6 +589,7 @@
         const foundCount = document.getElementById('found-count');
         const totalCount = document.getElementById('total-count');
         const returnHomeBtn = document.getElementById('return-home-btn');
+        const startBtn = document.getElementById('start-btn');
         const cluesAcross = document.getElementById('clues-across');
         const cluesDown = document.getElementById('clues-down');
         const activeClueText = document.getElementById('active-clue-text');
@@ -604,20 +608,49 @@
         let activeCellKey = null;
         let activeDirection = 'across';
         let hasCompletedPuzzle = false;
+        let isCheckingParticipantName = false;
+        let isDuplicateParticipantName = false;
+        let isParticipantNameVerified = false;
+        let participantCheckTimeout = null;
+        let participantCheckToken = 0;
 
         preparePuzzle();
         totalCount.textContent = puzzleWords.length;
         activeCellKey = getDefaultActiveKey();
         renderGame({ focus: false });
         restoreSavedGameState();
+        updateStartButtonState();
 
         toggleDirectionBtn.addEventListener('click', toggleActiveDirection);
+        nameInput.addEventListener('input', handleParticipantNameInput);
+        officeInput.addEventListener('input', updateStartButtonState);
 
         document.getElementById('onboarding-form').addEventListener('submit', (event) => {
             event.preventDefault();
 
-            currentUser.name = document.getElementById('user-name').value.trim();
-            currentUser.office = officeInput.value.trim();
+            const participantName = nameInput.value.trim();
+            const participantOffice = officeInput.value.trim();
+
+            if (isCheckingParticipantName) {
+                setNameCheckStatus('checking', 'Please wait while we check participant name...');
+                nameInput.focus({ preventScroll: true });
+                return;
+            }
+
+            if (isDuplicateParticipantName) {
+                setNameCheckStatus('duplicate', 'This participant has already used the one allowed attempt.');
+                nameInput.focus({ preventScroll: true });
+                return;
+            }
+
+            if (!isParticipantNameVerified) {
+                setNameCheckStatus('error', 'Please wait for the realtime name verification before starting.');
+                nameInput.focus({ preventScroll: true });
+                return;
+            }
+
+            currentUser.name = participantName;
+            currentUser.office = participantOffice;
 
             syncUserDisplay();
 
@@ -633,6 +666,150 @@
                 focusActiveCell(true);
             }, 500);
         });
+
+        function normalizeParticipantName(name) {
+            return name.trim().toLowerCase().replace(/\s+/g, ' ');
+        }
+
+        function setNameCheckStatus(state, message = '') {
+            const baseClass = 'mt-2 rounded-xl border px-3 py-2 text-xs font-medium';
+
+            if (!message) {
+                nameCheckStatus.className = `hidden ${baseClass}`;
+                nameCheckStatus.textContent = '';
+                return;
+            }
+
+            const stateClass = {
+                checking: 'block border-[rgba(148,64,112,0.12)] bg-white/70 text-[var(--wm-muted)]',
+                available: 'block border-emerald-200 bg-emerald-50/90 text-emerald-700',
+                duplicate: 'block border-rose-200 bg-rose-50/90 text-rose-600',
+                error: 'block border-amber-200 bg-amber-50/90 text-amber-700'
+            }[state] || 'block border-[rgba(148,64,112,0.12)] bg-white/70 text-[var(--wm-muted)]';
+
+            nameCheckStatus.className = `${baseClass} ${stateClass}`;
+            nameCheckStatus.textContent = message;
+        }
+
+        function updateStartButtonState() {
+            const hasName = nameInput.value.trim().length > 0;
+            const hasOffice = officeInput.value.trim().length > 0;
+            startBtn.disabled = !hasName || !hasOffice || isCheckingParticipantName || isDuplicateParticipantName || !isParticipantNameVerified;
+        }
+
+        async function requestScriptJson(url, options = {}) {
+            const response = await fetch(url, {
+                cache: 'no-cache',
+                ...options
+            });
+
+            const responseText = await response.text();
+            let payload = {};
+
+            if (responseText) {
+                try {
+                    payload = JSON.parse(responseText);
+                } catch (error) {
+                    payload = { raw: responseText };
+                }
+            }
+
+            if (!response.ok) {
+                throw new Error(payload.message || response.statusText || 'Request failed');
+            }
+
+            return payload;
+        }
+
+        function handleParticipantNameInput() {
+            clearTimeout(participantCheckTimeout);
+            participantCheckToken += 1;
+            isDuplicateParticipantName = false;
+            isParticipantNameVerified = false;
+
+            if (!nameInput.value.trim()) {
+                isCheckingParticipantName = false;
+                setNameCheckStatus();
+                updateStartButtonState();
+                return;
+            }
+
+            isCheckingParticipantName = true;
+            setNameCheckStatus('checking', 'Please wait while we check participant name...');
+            updateStartButtonState();
+
+            participantCheckTimeout = setTimeout(() => {
+                checkParticipantNameAvailability(nameInput.value);
+            }, 450);
+        }
+
+        async function checkParticipantNameAvailability(name, options = {}) {
+            const { force = false } = options;
+            const normalizedName = normalizeParticipantName(name);
+
+            if (!normalizedName) {
+                isCheckingParticipantName = false;
+                isDuplicateParticipantName = false;
+                isParticipantNameVerified = false;
+                setNameCheckStatus();
+                updateStartButtonState();
+                return { status: 'empty' };
+            }
+
+            if (!force && normalizeParticipantName(nameInput.value) !== normalizedName) {
+                return { status: 'stale' };
+            }
+
+            if (SCRIPT_URL === "REPLACE_WITH_YOUR_APPS_SCRIPT_URL") {
+                isCheckingParticipantName = false;
+                isDuplicateParticipantName = false;
+                isParticipantNameVerified = true;
+                setNameCheckStatus('available', 'Participant verification is disabled in local mode.');
+                updateStartButtonState();
+                return { status: 'available' };
+            }
+
+            const requestToken = ++participantCheckToken;
+            isCheckingParticipantName = true;
+            isDuplicateParticipantName = false;
+            isParticipantNameVerified = false;
+            setNameCheckStatus('checking', 'Please wait while we are checking participant name...');
+            updateStartButtonState();
+
+            try {
+                const url = `${SCRIPT_URL}?action=checkParticipant&name=${encodeURIComponent(normalizedName)}`;
+                const payload = await requestScriptJson(url, { method: 'GET', mode: 'cors' });
+
+                if (requestToken !== participantCheckToken) {
+                    return { status: 'stale' };
+                }
+
+                isCheckingParticipantName = false;
+                isDuplicateParticipantName = Boolean(payload.exists);
+                isParticipantNameVerified = !isDuplicateParticipantName;
+
+                if (isDuplicateParticipantName) {
+                    setNameCheckStatus('duplicate', 'This participant has already used the one allowed attempt.');
+                    updateStartButtonState();
+                    return { status: 'duplicate', payload };
+                }
+
+                setNameCheckStatus('available', 'Participant name is available.');
+                updateStartButtonState();
+                return { status: 'available', payload };
+            } catch (error) {
+                if (requestToken !== participantCheckToken) {
+                    return { status: 'stale' };
+                }
+
+                isCheckingParticipantName = false;
+                isDuplicateParticipantName = false;
+                isParticipantNameVerified = false;
+                setNameCheckStatus('error', 'Unable to verify participant right now.');
+                updateStartButtonState();
+                return { status: 'error', error };
+            }
+        }
 
         function syncUserDisplay() {
             document.getElementById('display-name').textContent = currentUser.name || 'Guest';
@@ -896,19 +1073,29 @@
 
             const data = {
                 name: currentUser.name,
+                normalizedName: normalizeParticipantName(currentUser.name),
                 office: currentUser.office,
                 time: timerDisplay.textContent,
                 seconds: elapsedSeconds
             };
 
             try {
-                await fetch(SCRIPT_URL, {
+                const payload = await requestScriptJson(SCRIPT_URL, {
                     method: 'POST',
-                    mode: 'no-cors',
-                    cache: 'no-cache',
-                    headers: { 'Content-Type': 'application/json' },
+                    mode: 'cors',
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
                     body: JSON.stringify(data)
                 });
+
+                if (payload.status === 'duplicate') {
+                    setModalState('error');
+                    submitStatusText.textContent = 'This participant has already used the one allowed attempt.';
+                    submitStatusLoader.classList.add('hidden');
+                    submitStatus.classList.remove('status-muted', 'status-success');
+                    submitStatus.classList.add('status-error');
+                    unlockReturnHome();
+                    return;
+                }
 
                 setModalState('success');
                 submitStatusText.textContent = 'Answer sent successfully. Thankyou for Participating.';
@@ -1281,9 +1468,14 @@
             introScreen.classList.remove('exit');
             introScreen.classList.add('active');
             document.getElementById('onboarding-form').reset();
-            document.getElementById('start-btn').disabled = false;
-            document.getElementById('start-btn').textContent = 'Begin Crossword';
+            clearTimeout(participantCheckTimeout);
+            isCheckingParticipantName = false;
+            isDuplicateParticipantName = false;
+            isParticipantNameVerified = false;
+            setNameCheckStatus();
+            startBtn.textContent = 'Begin Crossword';
             resetStatusBox();
+            updateStartButtonState();
             renderGame({ focus: false });
         }
     </script>
