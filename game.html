@@ -1,0 +1,1274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>National Women's Month Crossword Challenge</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        :root {
+            --wm-plum: #6b215f;
+            --wm-orchid: #944070;
+            --wm-rose: #d86c9c;
+            --wm-gold: #f6c85f;
+            --wm-cream: #fff8fc;
+            --wm-blush: #fde6f0;
+            --wm-border: #f4cade;
+            --wm-ink: #311530;
+            --wm-muted: #7a5d75;
+            --wm-panel: rgba(255, 255, 255, 0.84);
+            --wm-panel-strong: rgba(255, 255, 255, 0.94);
+        }
+
+        body {
+            font-family: 'Manrope', sans-serif;
+            background:
+                radial-gradient(circle at top left, rgba(246, 200, 95, 0.24), transparent 34%),
+                radial-gradient(circle at top right, rgba(216, 108, 156, 0.28), transparent 28%),
+                linear-gradient(160deg, #fff8fc 0%, #f8eff8 48%, #f4f0ff 100%);
+            color: var(--wm-ink);
+            position: relative;
+        }
+
+        body::before,
+        body::after {
+            content: "";
+            position: fixed;
+            pointer-events: none;
+            z-index: 0;
+            filter: blur(8px);
+        }
+
+        body::before {
+            width: 18rem;
+            height: 18rem;
+            top: 3rem;
+            left: -5rem;
+            background: rgba(216, 108, 156, 0.14);
+            border-radius: 9999px;
+        }
+
+        body::after {
+            width: 20rem;
+            height: 20rem;
+            right: -6rem;
+            bottom: 2rem;
+            background: rgba(107, 33, 95, 0.12);
+            border-radius: 40% 60% 62% 38% / 45% 41% 59% 55%;
+        }
+
+        .screen-container {
+            position: relative;
+            width: 100%;
+            min-height: 100vh;
+            z-index: 1;
+        }
+
+        .screen {
+            display: none;
+            opacity: 0;
+            width: 100%;
+            min-height: 100vh;
+            transition: opacity 0.5s ease-out, transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .screen.active {
+            display: flex;
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .screen.exit {
+            position: absolute;
+            top: 0;
+            left: 0;
+            opacity: 0;
+            transform: translateY(-30px);
+            pointer-events: none;
+        }
+
+        .display-font {
+            font-family: 'Cormorant Garamond', serif;
+            letter-spacing: 0.02em;
+        }
+
+        .theme-card {
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(255, 248, 252, 0.9));
+            border: 1px solid var(--wm-border);
+            box-shadow: 0 24px 70px rgba(107, 33, 95, 0.14);
+        }
+
+        .theme-panel {
+            background: var(--wm-panel);
+            border: 1px solid rgba(148, 64, 112, 0.12);
+            box-shadow: 0 18px 45px rgba(107, 33, 95, 0.1);
+            backdrop-filter: blur(18px);
+        }
+
+        .theme-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            border-radius: 9999px;
+            border: 1px solid rgba(148, 64, 112, 0.14);
+            background: rgba(255, 255, 255, 0.82);
+            padding: 0.5rem 0.9rem;
+            font-size: 0.72rem;
+            font-weight: 800;
+            letter-spacing: 0.22em;
+            text-transform: uppercase;
+            color: var(--wm-plum);
+        }
+
+        .theme-badge::before {
+            content: "";
+            width: 0.55rem;
+            height: 0.55rem;
+            border-radius: 9999px;
+            background: linear-gradient(135deg, var(--wm-gold), var(--wm-rose));
+            box-shadow: 0 0 0 4px rgba(216, 108, 156, 0.12);
+        }
+
+        .hero-medallion {
+            position: relative;
+            width: 5.75rem;
+            height: 5.75rem;
+            margin: 0 auto 1.25rem;
+            border-radius: 9999px;
+            background: linear-gradient(135deg, var(--wm-plum), var(--wm-rose));
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 18px 30px rgba(148, 64, 112, 0.28);
+        }
+
+        .hero-medallion::before {
+            content: "";
+            position: absolute;
+            inset: 0.5rem;
+            border-radius: 9999px;
+            border: 1px solid rgba(255, 255, 255, 0.45);
+        }
+
+        .theme-button {
+            background: linear-gradient(135deg, var(--wm-plum), var(--wm-rose));
+            color: #fff;
+            box-shadow: 0 16px 28px rgba(148, 64, 112, 0.22);
+        }
+
+        .theme-button:hover {
+            filter: brightness(1.03);
+        }
+
+        .theme-button:disabled {
+            opacity: 0.55;
+            cursor: not-allowed;
+            box-shadow: none;
+            filter: saturate(0.8);
+        }
+
+        .theme-input {
+            border: 1px solid rgba(148, 64, 112, 0.18);
+            background: rgba(255, 255, 255, 0.82);
+            color: var(--wm-ink);
+        }
+
+        .theme-input:focus {
+            border-color: rgba(148, 64, 112, 0.5);
+            box-shadow: 0 0 0 4px rgba(216, 108, 156, 0.14);
+        }
+
+        .accent-chip {
+            border: 1px solid rgba(148, 64, 112, 0.14);
+            background: rgba(255, 255, 255, 0.72);
+            color: var(--wm-muted);
+        }
+
+        .user-mark {
+            background: linear-gradient(135deg, var(--wm-plum), var(--wm-rose));
+            box-shadow: 0 12px 24px rgba(148, 64, 112, 0.22);
+        }
+
+        .crossword-grid {
+            display: grid;
+            gap: 0.35rem;
+            width: 100%;
+            max-width: 44rem;
+            margin: 0 auto;
+        }
+
+        .crossword-cell,
+        .crossword-block {
+            aspect-ratio: 1 / 1;
+            border-radius: 0.85rem;
+        }
+
+        .crossword-block {
+            pointer-events: none;
+            border: 1px solid rgba(148, 64, 112, 0.08);
+            background: rgba(148, 64, 112, 0.045);
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.45);
+            opacity: 0.75;
+        }
+
+        .crossword-cell {
+            position: relative;
+            border: 1px solid rgba(148, 64, 112, 0.14);
+            background: rgba(255, 255, 255, 0.94);
+            color: var(--wm-ink);
+            box-shadow: 0 2px 5px rgba(49, 21, 48, 0.08);
+            overflow: hidden;
+            transition: transform 0.16s ease, box-shadow 0.16s ease, background-color 0.16s ease, border-color 0.16s ease;
+        }
+
+        .crossword-cell:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 8px 18px rgba(148, 64, 112, 0.12);
+        }
+
+        .crossword-cell.filled {
+            background: rgba(253, 230, 240, 0.82);
+        }
+
+        .crossword-cell.correct {
+            border-color: rgba(148, 64, 112, 0.28);
+        }
+
+        .crossword-cell.active-word {
+            background: linear-gradient(135deg, rgba(246, 200, 95, 0.28), rgba(255, 255, 255, 0.96));
+            border-color: rgba(246, 200, 95, 0.58);
+            box-shadow: 0 12px 26px rgba(246, 200, 95, 0.18);
+        }
+
+        .crossword-cell.active-cell {
+            background: linear-gradient(135deg, rgba(246, 200, 95, 0.95), rgba(243, 165, 199, 0.92));
+            border-color: rgba(107, 33, 95, 0.26);
+            transform: translateY(-1px);
+        }
+
+        .crossword-cell.solved {
+            background: linear-gradient(135deg, var(--wm-plum), var(--wm-rose));
+            border-color: transparent;
+            color: #fff;
+            box-shadow: 0 14px 28px rgba(148, 64, 112, 0.22);
+        }
+
+        .crossword-number {
+            position: absolute;
+            top: 0.28rem;
+            left: 0.38rem;
+            font-size: 0.58rem;
+            line-height: 1;
+            font-weight: 800;
+            color: rgba(49, 21, 48, 0.7);
+            pointer-events: none;
+        }
+
+        .crossword-cell.solved .crossword-number {
+            color: rgba(255, 255, 255, 0.85);
+        }
+
+        .crossword-input {
+            width: 100%;
+            height: 100%;
+            border: none;
+            background: transparent;
+            text-align: center;
+            font-weight: 800;
+            font-size: clamp(0.95rem, 2vw, 1.3rem);
+            color: inherit;
+            text-transform: uppercase;
+            outline: none;
+            padding-top: 0.35rem;
+            caret-color: var(--wm-plum);
+        }
+
+        .crossword-input::selection {
+            background: rgba(246, 200, 95, 0.42);
+        }
+
+        .clue-button {
+            width: 100%;
+            border-radius: 1.15rem;
+            border: 1px solid rgba(148, 64, 112, 0.12);
+            background: rgba(255, 255, 255, 0.76);
+            color: var(--wm-ink);
+            display: flex;
+            gap: 0.85rem;
+            align-items: flex-start;
+            padding: 0.95rem 1rem;
+            text-align: left;
+            transition: transform 0.16s ease, border-color 0.16s ease, box-shadow 0.16s ease, background-color 0.16s ease;
+        }
+
+        .clue-button:hover {
+            transform: translateY(-1px);
+            border-color: rgba(148, 64, 112, 0.22);
+            box-shadow: 0 10px 22px rgba(148, 64, 112, 0.1);
+        }
+
+        .clue-button.active {
+            border-color: rgba(246, 200, 95, 0.52);
+            background: linear-gradient(135deg, rgba(246, 200, 95, 0.22), rgba(255, 255, 255, 0.92));
+            box-shadow: 0 14px 28px rgba(246, 200, 95, 0.14);
+        }
+
+        .clue-button.found {
+            opacity: 0.72;
+            text-decoration: line-through;
+        }
+
+        .clue-marker {
+            min-width: 2rem;
+            height: 2rem;
+            border-radius: 9999px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            font-weight: 800;
+            color: var(--wm-plum);
+            background: rgba(246, 200, 95, 0.2);
+            box-shadow: inset 0 0 0 1px rgba(148, 64, 112, 0.08);
+        }
+
+        .clue-button.found .clue-marker {
+            background: linear-gradient(135deg, rgba(246, 200, 95, 0.92), rgba(216, 108, 156, 0.9));
+            color: var(--wm-ink);
+        }
+
+        .status-muted {
+            color: var(--wm-muted);
+        }
+
+        .status-success {
+            color: #15803d;
+        }
+
+        .status-error {
+            color: #e11d48;
+        }
+
+        .modal-card {
+            background: rgba(255, 255, 255, 0.94);
+            border: 1px solid rgba(148, 64, 112, 0.14);
+            box-shadow: 0 30px 70px rgba(49, 21, 48, 0.22);
+            backdrop-filter: blur(18px);
+        }
+
+        .modal-icon-shell {
+            transition: background-color 0.2s ease, color 0.2s ease;
+        }
+
+        .loader-spinner {
+            width: 2.15rem;
+            height: 2.15rem;
+            border-radius: 9999px;
+            border: 3px solid rgba(148, 64, 112, 0.18);
+            border-top-color: var(--wm-plum);
+            animation: modal-spin 0.85s linear infinite;
+        }
+
+        .status-inline-loader {
+            width: 0.95rem;
+            height: 0.95rem;
+            border-radius: 9999px;
+            border: 2px solid rgba(148, 64, 112, 0.18);
+            border-top-color: var(--wm-plum);
+            animation: modal-spin 0.85s linear infinite;
+            flex-shrink: 0;
+        }
+
+        @keyframes modal-spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        @media (max-width: 640px) {
+            .theme-badge {
+                letter-spacing: 0.14em;
+            }
+
+            .crossword-grid {
+                gap: 0.22rem;
+            }
+
+            .crossword-cell,
+            .crossword-block {
+                border-radius: 0.65rem;
+            }
+
+            .crossword-number {
+                top: 0.18rem;
+                left: 0.28rem;
+                font-size: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body class="min-h-screen overflow-x-hidden">
+    <div class="screen-container">
+        <div id="intro-screen" class="screen active justify-center p-4">
+            <div class="max-w-lg w-full theme-card rounded-[2rem] p-8 md:p-10">
+                <div class="text-center mb-8">
+                    <span class="theme-badge mb-5">National Women's Month</span>
+                    <div class="hero-medallion">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-9 w-9" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 5a4 4 0 110 8 4 4 0 010-8zm0 8v6m-3 0h6" />
+                        </svg>
+                    </div>
+                    <p class="text-xs font-extrabold uppercase tracking-[0.35em] text-[#944070]/70 mb-3">March Celebration</p>
+                    <h1 class="display-font text-5xl text-[var(--wm-plum)] leading-none">Crossword Challenge</h1>
+                </div>
+
+                <div class="rounded-[1.5rem] border border-[rgba(148,64,112,0.12)] bg-[linear-gradient(135deg,rgba(246,200,95,0.16),rgba(216,108,156,0.1))] px-5 py-4 text-sm text-[var(--wm-ink)] mb-8">
+                    Honor the strength of Filipinas in every community. Solve each clue to complete the Women's Month crossword.
+                </div>
+
+                <form id="onboarding-form" class="space-y-6">
+                    <div>
+                        <label class="block text-sm font-semibold text-[var(--wm-plum)] mb-2">Full Name</label>
+                        <input required type="text" id="user-name" placeholder="Enter your name" class="theme-input w-full px-4 py-3 rounded-2xl outline-none transition">
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-semibold text-[var(--wm-plum)] mb-2">Office</label>
+                        <div class="relative">
+                            <select required id="user-office" class="theme-input w-full px-4 py-3 rounded-2xl outline-none transition appearance-none">
+                                <option value="" disabled selected>Select your office</option>
+                            </select>
+                            <div class="absolute inset-y-0 right-0 flex items-center px-4 pointer-events-none text-[var(--wm-muted)]">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path d="M19 9l-7 7-7-7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+                                </svg>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button type="submit" id="start-btn" class="theme-button w-full py-4 rounded-2xl font-bold text-lg transform transition active:scale-95">
+                        Begin Crossword
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <div id="game-screen" class="screen py-6 px-4">
+            <div class="max-w-5xl w-full">
+                <div class="theme-panel rounded-[2rem] p-5 md:p-6 mb-6 flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
+                    <div class="flex items-center gap-3">
+                        <span class="theme-badge">Crossword Puzzle</span>
+                    </div>
+
+                    <div class="flex items-center gap-4 self-start md:self-auto">
+                        <div class="h-14 w-14 user-mark rounded-full flex items-center justify-center text-white font-bold text-xl uppercase" id="user-initial">?</div>
+                        <div>
+                            <h3 class="font-extrabold text-[var(--wm-ink)] leading-none" id="display-name">Guest</h3>
+                            <span class="text-xs font-bold uppercase tracking-[0.22em] text-[var(--wm-orchid)]" id="display-office">Office</span>
+                        </div>
+                    </div>
+
+                    <div class="flex flex-wrap items-center gap-3 md:gap-4">
+                        <div class="accent-chip rounded-2xl px-4 py-3 text-center min-w-[96px]">
+                            <p class="text-[10px] uppercase font-extrabold tracking-[0.24em] text-[var(--wm-muted)]">Time</p>
+                            <p class="text-xl font-black text-[var(--wm-ink)] tabular-nums" id="timer-display">00:00</p>
+                        </div>
+                        <div class="accent-chip rounded-2xl px-4 py-3 text-center min-w-[96px]">
+                            <p class="text-[10px] uppercase font-extrabold tracking-[0.24em] text-[var(--wm-muted)]">Progress</p>
+                            <p class="text-xl font-black text-[var(--wm-ink)]"><span id="found-count">0</span>/<span id="total-count">9</span></p>
+                        </div>
+                        <button onclick="exitGame()" class="group rounded-full border border-[rgba(148,64,112,0.16)] bg-white/80 p-3 text-[var(--wm-muted)] transition-colors duration-300 hover:text-rose-600" type="button" aria-label="Exit game">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 transform group-hover:-translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="flex flex-col lg:flex-row gap-6">
+                    <div class="flex-1 theme-panel rounded-[2rem] p-4 md:p-5">
+                        <div class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3 mb-5 px-1">
+                            <div>
+                                <p class="text-xs font-extrabold uppercase tracking-[0.3em] text-[var(--wm-orchid)]">Women's Month Crossword</p>
+                                <h3 class="display-font text-3xl text-[var(--wm-plum)] leading-none mt-1">Lead like the Babaylans</h3>
+                            </div>
+                            <p class="text-xs text-[var(--wm-muted)] max-w-xs">Tap a clue or square, then type letters to fill the puzzle. Click the same square again to switch direction.</p>
+                        </div>
+
+                        <div class="rounded-[1.5rem] bg-[rgba(255,255,255,0.68)] p-4 md:p-5 shadow-inner border border-[rgba(148,64,112,0.12)]">
+                            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+                                <div>
+                                    <p class="text-[10px] uppercase font-extrabold tracking-[0.3em] text-[var(--wm-muted)]">Active Clue</p>
+                                    <p id="active-clue-text" class="text-sm font-semibold text-[var(--wm-ink)]">Select a clue to begin solving.</p>
+                                </div>
+                                <button id="toggle-direction-btn" type="button" class="rounded-full border border-[rgba(148,64,112,0.14)] bg-white/80 px-4 py-2 text-xs font-extrabold uppercase tracking-[0.22em] text-[var(--wm-orchid)] transition hover:border-[rgba(148,64,112,0.28)] disabled:opacity-50 disabled:cursor-not-allowed">
+                                    Direction: Across
+                                </button>
+                            </div>
+
+                            <div id="grid-container" class="crossword-grid"></div>
+
+                            <p class="text-xs text-[var(--wm-muted)] mt-4">Keyboard support: arrow keys move through the board, backspace clears, and Enter toggles direction on crossing cells.</p>
+                        </div>
+                    </div>
+
+                    <div class="w-full lg:w-80 flex flex-col">
+                        <div class="theme-panel rounded-[2rem] p-6 flex-1">
+                            <h2 class="text-sm font-black text-[var(--wm-muted)] uppercase tracking-[0.3em] mb-5 border-b border-[rgba(148,64,112,0.12)] pb-3">Filipina Clues</h2>
+                            <div class="space-y-6">
+                                <div>
+                                    <h3 class="text-xs font-bold text-[var(--wm-orchid)] uppercase mb-3 tracking-[0.24em]">Across</h3>
+                                    <ul id="clues-across" class="space-y-3"></ul>
+                                </div>
+                                <div>
+                                    <h3 class="text-xs font-bold text-[var(--wm-orchid)] uppercase mb-3 tracking-[0.24em]">Down</h3>
+                                    <ul id="clues-down" class="space-y-3"></ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+        <div class="modal-card rounded-[2rem] p-8 max-w-sm w-full text-center">
+            <div id="modal-icon-shell" class="modal-icon-shell w-16 h-16 bg-[rgba(246,200,95,0.22)] text-[var(--wm-plum)] rounded-full flex items-center justify-center mx-auto mb-4">
+                <div id="modal-loader" class="loader-spinner"></div>
+                <span id="modal-error-icon" class="hidden text-4xl font-black leading-none">!</span>
+                <svg id="modal-success-icon" class="w-10 h-10 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
+                </svg>
+            </div>
+            <span id="modal-badge" class="theme-badge mb-4">Submitting Entry</span>
+            <h2 id="modal-title" class="display-font text-4xl font-bold text-[var(--wm-plum)] mb-1">Please wait</h2>
+            <p class="text-[var(--wm-muted)] mb-4" id="modal-congrats">Please wait while your answer is being sent to HRMDO.</p>
+
+            <div class="bg-[linear-gradient(135deg,rgba(246,200,95,0.2),rgba(216,108,156,0.12))] py-3 px-4 rounded-2xl mb-4 border border-[rgba(148,64,112,0.1)]">
+                <p class="text-[10px] text-[var(--wm-muted)] font-bold uppercase tracking-[0.28em]">Final Time</p>
+                <p class="text-2xl font-black text-[var(--wm-plum)]" id="final-time">00:00</p>
+            </div>
+
+            <div id="submit-status" class="status-muted text-xs font-medium mb-6 py-2 px-3 bg-white/70 rounded-xl border border-[rgba(148,64,112,0.08)] flex items-center justify-center gap-2">
+                <span id="submit-status-loader" class="status-inline-loader"></span>
+                <span id="submit-status-text">Please wait while your answer is being sent to HRMDO...</span>
+            </div>
+
+            <button id="return-home-btn" onclick="exitGame()" class="theme-button w-full py-4 rounded-2xl font-bold transition" disabled type="button">Return Home</button>
+        </div>
+    </div>
+
+    <script>
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyhlFfEPehfbqifdcHhKkQpEOQv3gzj3y6YUWyTtxXP-w69tzcK9h8A9jOvZdtuQQ33PA/exec";
+        const GAME_STATE_KEY = 'women-month-crossword-session';
+
+        const OFFICES = ['CMO', 'CMO - CARPOOL', 'CMO - YOUTH', 'CMO - NORTH', 'CMO - SUPPLY', 'CADMO', 'VMO', 'SP', 'CPDO', 'CLGOO', 'CTO', 'CAO', 'CASSO', 'CBO', 'HRMDO', 'CCRO', 'CDO', 'CHO', 'TCH', 'CPO', 'CSWDO', 'CEO', 'OBO', 'CGSO', 'CENRO', 'CAGRIO', 'CVO', 'EED', 'CIAS', 'TOMECO', 'CIO', 'CHCDO', 'CDRRMO', 'CCDLAO', 'CTOO', 'CLO', 'CMISO', 'CLEP', 'SPORTS', 'BPLD', 'FLET', 'TACRU', 'CNO', 'TNSH', 'PDAO', 'OSCA', 'TCPO', 'PESO', 'TCCC', 'TNBT', 'BAC', 'DILG', 'COMELEC', 'COA'];
+        const PUZZLE_TEMPLATE = [
+            { answer: 'RESILIENT', clue: 'A trait of a strong Filipina leader', direction: 'down', row: 0, col: 6 },
+            { answer: 'FEMINISM', clue: 'Deep respect for women in Filipino culture', direction: 'down', row: 0, col: 8 },
+            { answer: 'BABAYLAN', clue: 'Pre-colonial Filipina spiritual leader', direction: 'across', row: 4, col: 1 },
+            { answer: 'EQUALITY', clue: 'Equality between men and women', direction: 'across', row: 8, col: 0 }
+        ];
+
+        const introScreen = document.getElementById('intro-screen');
+        const gameScreen = document.getElementById('game-screen');
+        const officeSelect = document.getElementById('user-office');
+        const gridContainer = document.getElementById('grid-container');
+        const modal = document.getElementById('modal');
+        const modalIconShell = document.getElementById('modal-icon-shell');
+        const modalLoader = document.getElementById('modal-loader');
+        const modalErrorIcon = document.getElementById('modal-error-icon');
+        const modalSuccessIcon = document.getElementById('modal-success-icon');
+        const modalBadge = document.getElementById('modal-badge');
+        const modalTitle = document.getElementById('modal-title');
+        const modalCongrats = document.getElementById('modal-congrats');
+        const timerDisplay = document.getElementById('timer-display');
+        const submitStatus = document.getElementById('submit-status');
+        const submitStatusLoader = document.getElementById('submit-status-loader');
+        const submitStatusText = document.getElementById('submit-status-text');
+        const foundCount = document.getElementById('found-count');
+        const totalCount = document.getElementById('total-count');
+        const returnHomeBtn = document.getElementById('return-home-btn');
+        const cluesAcross = document.getElementById('clues-across');
+        const cluesDown = document.getElementById('clues-down');
+        const activeClueText = document.getElementById('active-clue-text');
+        const toggleDirectionBtn = document.getElementById('toggle-direction-btn');
+
+        let puzzleWords = [];
+        let puzzleCells = new Map();
+        let boardRows = 0;
+        let boardCols = 0;
+        let userEntries = {};
+        let solvedWords = new Set();
+        let currentUser = { name: '', office: '' };
+        let startTime = null;
+        let timerInterval = null;
+        let elapsedSeconds = 0;
+        let activeCellKey = null;
+        let activeDirection = 'across';
+        let hasCompletedPuzzle = false;
+
+        OFFICES.sort().forEach(office => {
+            officeSelect.add(new Option(office, office));
+        });
+
+        preparePuzzle();
+        totalCount.textContent = puzzleWords.length;
+        activeCellKey = getDefaultActiveKey();
+        renderGame({ focus: false });
+        restoreSavedGameState();
+
+        toggleDirectionBtn.addEventListener('click', toggleActiveDirection);
+
+        document.getElementById('onboarding-form').addEventListener('submit', (event) => {
+            event.preventDefault();
+
+            currentUser.name = document.getElementById('user-name').value.trim();
+            currentUser.office = officeSelect.value;
+
+            syncUserDisplay();
+
+            initGame();
+            window.scrollTo(0, 0);
+            introScreen.classList.add('exit');
+            saveGameState();
+
+            setTimeout(() => {
+                introScreen.classList.remove('active', 'exit');
+                gameScreen.classList.add('active');
+                startTimer();
+                focusActiveCell(true);
+            }, 500);
+        });
+
+        function syncUserDisplay() {
+            document.getElementById('display-name').textContent = currentUser.name || 'Guest';
+            document.getElementById('display-office').textContent = currentUser.office || 'Office';
+            document.getElementById('user-initial').textContent = (currentUser.name || '?').charAt(0).toUpperCase();
+        }
+
+        function preparePuzzle() {
+            puzzleWords = PUZZLE_TEMPLATE.map((item, index) => ({
+                ...item,
+                id: index,
+                number: null,
+                cells: []
+            }));
+
+            puzzleCells = new Map();
+            let maxRow = 0;
+            let maxCol = 0;
+
+            puzzleWords.forEach(word => {
+                for (let index = 0; index < word.answer.length; index++) {
+                    const row = word.row + (word.direction === 'down' ? index : 0);
+                    const col = word.col + (word.direction === 'across' ? index : 0);
+                    const key = getCellKey(row, col);
+                    let cell = puzzleCells.get(key);
+
+                    if (cell && cell.solution !== word.answer[index]) {
+                        throw new Error(`Conflicting puzzle data at ${key}`);
+                    }
+
+                    if (!cell) {
+                        cell = { key, row, col, solution: word.answer[index], words: [], number: null };
+                        puzzleCells.set(key, cell);
+                    }
+
+                    cell.words.push(word.id);
+                    word.cells.push({ row, col, key });
+                    maxRow = Math.max(maxRow, row);
+                    maxCol = Math.max(maxCol, col);
+                }
+            });
+
+            boardRows = maxRow + 1;
+            boardCols = maxCol + 1;
+
+            let clueNumber = 1;
+            for (let row = 0; row < boardRows; row++) {
+                for (let col = 0; col < boardCols; col++) {
+                    const key = getCellKey(row, col);
+                    const cell = puzzleCells.get(key);
+                    if (!cell) continue;
+
+                    const starters = cell.words
+                        .map(id => puzzleWords.find(word => word.id === id))
+                        .filter(word => word && word.cells[0].key === key);
+
+                    if (!starters.length) continue;
+
+                    cell.number = clueNumber;
+                    starters.forEach(word => {
+                        word.number = clueNumber;
+                    });
+                    clueNumber++;
+                }
+            }
+        }
+
+        function getCellKey(row, col) {
+            return `${row}-${col}`;
+        }
+
+        function formatDirection(direction) {
+            return direction.charAt(0).toUpperCase() + direction.slice(1);
+        }
+
+        function getDefaultActiveKey() {
+            const firstAcross = puzzleWords
+                .filter(word => word.direction === 'across')
+                .sort((left, right) => left.number - right.number)[0];
+
+            return firstAcross ? firstAcross.cells[0].key : (puzzleWords[0]?.cells[0]?.key || null);
+        }
+
+        function getWordsForCell(key) {
+            const cell = puzzleCells.get(key);
+            return cell ? cell.words.map(id => puzzleWords.find(word => word.id === id)).filter(Boolean) : [];
+        }
+
+        function getWordForCell(key, direction = activeDirection) {
+            const words = getWordsForCell(key);
+            return words.find(word => word.direction === direction) || words[0] || null;
+        }
+
+        function getActiveWord() {
+            return activeCellKey ? getWordForCell(activeCellKey, activeDirection) : null;
+        }
+
+        function isCellInWord(key, word) {
+            return word ? word.cells.some(cell => cell.key === key) : false;
+        }
+
+        function getNeighborInWord(word, key, offset) {
+            const index = word.cells.findIndex(cell => cell.key === key);
+            return index === -1 ? null : (word.cells[index + offset] || null);
+        }
+
+        function findCellAlongAxis(key, rowStep, colStep) {
+            const origin = puzzleCells.get(key);
+            if (!origin) return null;
+
+            let row = origin.row + rowStep;
+            let col = origin.col + colStep;
+
+            while (row >= 0 && row < boardRows && col >= 0 && col < boardCols) {
+                const nextCell = puzzleCells.get(getCellKey(row, col));
+                if (nextCell) return nextCell;
+                row += rowStep;
+                col += colStep;
+            }
+
+            return null;
+        }
+
+        function updateTimerDisplay() {
+            const minutes = Math.floor(elapsedSeconds / 60).toString().padStart(2, '0');
+            const seconds = (elapsedSeconds % 60).toString().padStart(2, '0');
+            timerDisplay.textContent = `${minutes}:${seconds}`;
+        }
+
+        function saveGameState() {
+            if (!currentUser.name || !currentUser.office || hasCompletedPuzzle) return;
+
+            const isGameVisible = gameScreen.classList.contains('active') || introScreen.classList.contains('exit');
+            if (!isGameVisible) return;
+
+            const state = {
+                user: currentUser,
+                userEntries,
+                activeCellKey,
+                activeDirection,
+                startTime,
+                hasCompletedPuzzle
+            };
+
+            sessionStorage.setItem(GAME_STATE_KEY, JSON.stringify(state));
+        }
+
+        function clearSavedGameState() {
+            sessionStorage.removeItem(GAME_STATE_KEY);
+        }
+
+        function restoreSavedGameState() {
+            const rawState = sessionStorage.getItem(GAME_STATE_KEY);
+            if (!rawState) return;
+
+            try {
+                const state = JSON.parse(rawState);
+                if (!state?.user?.name || !state?.user?.office || state.hasCompletedPuzzle) {
+                    clearSavedGameState();
+                    return;
+                }
+
+                currentUser = {
+                    name: String(state.user.name),
+                    office: String(state.user.office)
+                };
+
+                document.getElementById('user-name').value = currentUser.name;
+                officeSelect.value = currentUser.office;
+                syncUserDisplay();
+
+                userEntries = {};
+                Object.entries(state.userEntries || {}).forEach(([key, value]) => {
+                    if (puzzleCells.has(key) && typeof value === 'string' && /^[A-Z]$/.test(value)) {
+                        userEntries[key] = value;
+                    }
+                });
+
+                activeDirection = state.activeDirection === 'down' ? 'down' : 'across';
+                activeCellKey = puzzleCells.has(state.activeCellKey) ? state.activeCellKey : getDefaultActiveKey();
+                hasCompletedPuzzle = false;
+                solvedWords = new Set();
+                resetStatusBox();
+                updateSolvedWords();
+
+                introScreen.classList.remove('active', 'exit');
+                gameScreen.classList.add('active');
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+
+                startTimer(Number.isFinite(state.startTime) ? state.startTime : Date.now());
+                renderGame({ select: true });
+            } catch (error) {
+                clearSavedGameState();
+            }
+        }
+
+        function startTimer(resumeFrom = Date.now()) {
+            clearInterval(timerInterval);
+            startTime = resumeFrom;
+            elapsedSeconds = Math.max(0, Math.floor((Date.now() - startTime) / 1000));
+            updateTimerDisplay();
+            saveGameState();
+
+            timerInterval = setInterval(() => {
+                elapsedSeconds = Math.floor((Date.now() - startTime) / 1000);
+                updateTimerDisplay();
+            }, 1000);
+        }
+
+        function setModalState(state) {
+            const isSending = state === 'sending';
+            const isSuccess = state === 'success';
+            const isError = state === 'error';
+
+            modalLoader.classList.toggle('hidden', !isSending);
+            modalErrorIcon.classList.toggle('hidden', !isError);
+            modalSuccessIcon.classList.toggle('hidden', !isSuccess);
+
+            if (isSending) {
+                modalIconShell.className = 'modal-icon-shell w-16 h-16 bg-[rgba(246,200,95,0.22)] text-[var(--wm-plum)] rounded-full flex items-center justify-center mx-auto mb-4';
+                modalBadge.textContent = 'Submitting Entry';
+                modalTitle.textContent = 'Please wait';
+                modalCongrats.textContent = 'Please wait while your answer is being sent to the registry.';
+            } else if (isSuccess) {
+                modalIconShell.className = 'modal-icon-shell w-16 h-16 bg-[rgba(246,200,95,0.22)] text-[var(--wm-plum)] rounded-full flex items-center justify-center mx-auto mb-4';
+                modalBadge.textContent = 'Celebration Complete';
+                modalTitle.textContent = 'Mabuhay!';
+                modalCongrats.textContent = `${currentUser.name}, you completed the Philippine National Women's Month crossword challenge.`;
+            } else if (isError) {
+                modalIconShell.className = 'modal-icon-shell w-16 h-16 bg-[rgba(225,29,72,0.12)] text-rose-600 rounded-full flex items-center justify-center mx-auto mb-4';
+                modalBadge.textContent = 'Submission Issue';
+                modalTitle.textContent = 'Almost there';
+                modalCongrats.textContent = 'Your crossword is complete, but the answer could not be sent right now.';
+            }
+        }
+
+        function resetStatusBox() {
+            setModalState('sending');
+            submitStatusText.textContent = 'Please wait while your answer is being sent...';
+            submitStatusLoader.classList.remove('hidden');
+            submitStatus.classList.remove('status-success', 'status-error');
+            submitStatus.classList.add('status-muted');
+            returnHomeBtn.disabled = true;
+        }
+
+        function unlockReturnHome() {
+            returnHomeBtn.disabled = false;
+        }
+
+        async function sendToGoogleSheet() {
+            if (SCRIPT_URL === "REPLACE_WITH_YOUR_APPS_SCRIPT_URL") {
+                setModalState('success');
+                submitStatusText.textContent = 'Answer saved locally. You may now return home.';
+                submitStatusLoader.classList.add('hidden');
+                submitStatus.classList.remove('status-muted', 'status-error');
+                submitStatus.classList.add('status-success');
+                unlockReturnHome();
+                return;
+            }
+
+            const data = {
+                name: currentUser.name,
+                office: currentUser.office,
+                time: timerDisplay.textContent,
+                seconds: elapsedSeconds
+            };
+
+            try {
+                await fetch(SCRIPT_URL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    cache: 'no-cache',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+
+                setModalState('success');
+                submitStatusText.textContent = 'Answer sent successfully. You may now return home.';
+                submitStatusLoader.classList.add('hidden');
+                submitStatus.classList.remove('status-muted', 'status-error');
+                submitStatus.classList.add('status-success');
+                unlockReturnHome();
+            } catch (error) {
+                setModalState('error');
+                submitStatusText.textContent = 'We could not send the answer. You can return home and try again later.';
+                submitStatusLoader.classList.add('hidden');
+                submitStatus.classList.remove('status-muted', 'status-success');
+                submitStatus.classList.add('status-error');
+                unlockReturnHome();
+            }
+        }
+
+        function initGame() {
+            userEntries = {};
+            solvedWords = new Set();
+            hasCompletedPuzzle = false;
+            activeDirection = 'across';
+            activeCellKey = getDefaultActiveKey();
+            foundCount.textContent = '0';
+            resetStatusBox();
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+            renderGame({ focus: false });
+        }
+
+        function renderGame(options = {}) {
+            renderGrid();
+            renderClues();
+            updateActiveClueDisplay();
+            foundCount.textContent = solvedWords.size.toString();
+            saveGameState();
+
+            if (options.focus !== false) {
+                focusActiveCell(options.select);
+            }
+        }
+
+        function renderGrid() {
+            gridContainer.innerHTML = '';
+            gridContainer.style.gridTemplateColumns = `repeat(${boardCols}, minmax(0, 1fr))`;
+
+            const activeWord = getActiveWord();
+
+            for (let row = 0; row < boardRows; row++) {
+                for (let col = 0; col < boardCols; col++) {
+                    const key = getCellKey(row, col);
+                    const cell = puzzleCells.get(key);
+
+                    if (!cell) {
+                        const block = document.createElement('div');
+                        block.className = 'crossword-block';
+                        block.setAttribute('aria-hidden', 'true');
+                        gridContainer.appendChild(block);
+                        continue;
+                    }
+
+                    const value = userEntries[key] || '';
+                    const wrapper = document.createElement('div');
+                    wrapper.className = 'crossword-cell';
+
+                    if (value) wrapper.classList.add('filled');
+                    if (value === cell.solution) wrapper.classList.add('correct');
+                    if (isCellInWord(key, activeWord)) wrapper.classList.add('active-word');
+                    if (key === activeCellKey) wrapper.classList.add('active-cell');
+                    if (cell.words.some(id => solvedWords.has(id))) wrapper.classList.add('solved');
+
+                    if (cell.number) {
+                        const number = document.createElement('span');
+                        number.className = 'crossword-number';
+                        number.textContent = cell.number;
+                        wrapper.appendChild(number);
+                    }
+
+                    const input = document.createElement('input');
+                    input.type = 'text';
+                    input.maxLength = 1;
+                    input.className = 'crossword-input';
+                    input.value = value;
+                    input.dataset.key = key;
+                    input.autocomplete = 'off';
+                    input.autocapitalize = 'characters';
+                    input.spellcheck = false;
+                    input.inputMode = 'text';
+                    input.enterKeyHint = 'next';
+                    input.setAttribute('aria-label', `Row ${row + 1}, column ${col + 1}`);
+                    input.addEventListener('focus', handleCellFocus);
+                    input.addEventListener('click', handleCellClick);
+                    input.addEventListener('input', handleCellInput);
+                    input.addEventListener('keydown', handleCellKeyDown);
+
+                    wrapper.appendChild(input);
+                    gridContainer.appendChild(wrapper);
+                }
+            }
+        }
+
+        function renderClues() {
+            renderClueList(cluesAcross, 'across');
+            renderClueList(cluesDown, 'down');
+        }
+
+        function renderClueList(container, direction) {
+            container.innerHTML = '';
+            const activeWord = getActiveWord();
+
+            puzzleWords
+                .filter(word => word.direction === direction)
+                .sort((left, right) => left.number - right.number)
+                .forEach(word => {
+                    const item = document.createElement('li');
+                    const button = document.createElement('button');
+                    button.type = 'button';
+                    button.className = 'clue-button';
+
+                    if (activeWord && activeWord.id === word.id) button.classList.add('active');
+                    if (solvedWords.has(word.id)) button.classList.add('found');
+
+                    button.innerHTML = `
+                        <span class="clue-marker">${word.number}</span>
+                        <span>
+                            <span class="block text-[10px] uppercase font-extrabold tracking-[0.24em] text-[var(--wm-muted)] mb-1">${word.answer.length} letters</span>
+                            <span class="text-sm font-medium leading-6">${word.clue}</span>
+                        </span>
+                    `;
+
+                    button.addEventListener('click', () => {
+                        activeDirection = word.direction;
+                        activeCellKey = word.cells.find(cell => !userEntries[cell.key])?.key || word.cells[0].key;
+                        renderGame({ select: true });
+                    });
+
+                    item.appendChild(button);
+                    container.appendChild(item);
+                });
+        }
+
+        function updateActiveClueDisplay() {
+            const activeWord = getActiveWord();
+            const activeCell = activeCellKey ? puzzleCells.get(activeCellKey) : null;
+            const canToggle = activeCell ? activeCell.words.length > 1 : false;
+
+            if (!activeWord) {
+                activeClueText.textContent = 'Select a clue to begin solving.';
+                toggleDirectionBtn.disabled = true;
+                toggleDirectionBtn.textContent = 'Direction: Across';
+                return;
+            }
+
+            activeClueText.textContent = `${activeWord.number} ${formatDirection(activeWord.direction)}. ${activeWord.clue}`;
+            toggleDirectionBtn.disabled = !canToggle;
+            toggleDirectionBtn.textContent = `Direction: ${formatDirection(activeDirection)}`;
+        }
+
+        function focusActiveCell(selectContents = false) {
+            if (!activeCellKey) return;
+
+            requestAnimationFrame(() => {
+                const input = gridContainer.querySelector(`input[data-key="${activeCellKey}"]`);
+                if (!input) return;
+                input.focus({ preventScroll: true });
+                if (selectContents) input.select();
+            });
+        }
+
+        function handleCellFocus(event) {
+            const key = event.target.dataset.key;
+
+            if (activeCellKey === key && getWordForCell(key, activeDirection)) return;
+
+            activeCellKey = key;
+            if (!getWordForCell(key, activeDirection)) {
+                activeDirection = getWordsForCell(key)[0]?.direction || 'across';
+            }
+
+            renderGame({ focus: false });
+        }
+
+        function handleCellClick(event) {
+            const key = event.target.dataset.key;
+            const cell = puzzleCells.get(key);
+            if (!cell) return;
+
+            if (activeCellKey === key && cell.words.length > 1) {
+                toggleActiveDirection();
+                return;
+            }
+
+            if (activeCellKey !== key) {
+                activeCellKey = key;
+                if (!getWordForCell(key, activeDirection)) {
+                    activeDirection = getWordsForCell(key)[0]?.direction || 'across';
+                }
+                renderGame();
+            }
+        }
+
+        function handleCellInput(event) {
+            const key = event.target.dataset.key;
+            const value = event.target.value.toUpperCase().replace(/[^A-Z]/g, '').slice(-1);
+
+            activeCellKey = key;
+            if (value) {
+                userEntries[key] = value;
+            } else {
+                delete userEntries[key];
+            }
+
+            updateSolvedWords();
+
+            if (value) {
+                const word = getWordForCell(key, activeDirection);
+                const nextCell = word ? getNeighborInWord(word, key, 1) : null;
+                if (nextCell) activeCellKey = nextCell.key;
+            }
+
+            renderGame();
+        }
+
+        function handleCellKeyDown(event) {
+            const key = event.target.dataset.key;
+            if (!puzzleCells.has(key)) return;
+
+            if (event.key === 'Enter' || event.key === ' ') {
+                event.preventDefault();
+                toggleActiveDirection();
+                return;
+            }
+
+            if (event.key === 'Backspace') {
+                event.preventDefault();
+
+                if (userEntries[key]) {
+                    delete userEntries[key];
+                    activeCellKey = key;
+                } else {
+                    const word = getWordForCell(key, activeDirection);
+                    const previousCell = word ? getNeighborInWord(word, key, -1) : null;
+                    if (previousCell) {
+                        delete userEntries[previousCell.key];
+                        activeCellKey = previousCell.key;
+                    }
+                }
+
+                updateSolvedWords();
+                renderGame();
+                return;
+            }
+
+            if (event.key === 'Delete') {
+                event.preventDefault();
+                delete userEntries[key];
+                activeCellKey = key;
+                updateSolvedWords();
+                renderGame();
+                return;
+            }
+
+            const movement = {
+                ArrowLeft: { direction: 'across', step: -1, rowStep: 0, colStep: -1 },
+                ArrowRight: { direction: 'across', step: 1, rowStep: 0, colStep: 1 },
+                ArrowUp: { direction: 'down', step: -1, rowStep: -1, colStep: 0 },
+                ArrowDown: { direction: 'down', step: 1, rowStep: 1, colStep: 0 }
+            }[event.key];
+
+            if (!movement) return;
+
+            event.preventDefault();
+            activeDirection = movement.direction;
+
+            const word = getWordForCell(key, movement.direction);
+            const neighbor = word ? getNeighborInWord(word, key, movement.step) : null;
+            const fallback = findCellAlongAxis(key, movement.rowStep, movement.colStep);
+
+            if (neighbor || fallback) {
+                activeCellKey = (neighbor || fallback).key;
+            }
+
+            renderGame();
+        }
+
+        function toggleActiveDirection() {
+            if (!activeCellKey) return;
+
+            const cell = puzzleCells.get(activeCellKey);
+            if (!cell || cell.words.length < 2) return;
+
+            activeDirection = activeDirection === 'across' ? 'down' : 'across';
+            renderGame();
+        }
+
+        function updateSolvedWords() {
+            const nextSolved = new Set();
+
+            puzzleWords.forEach(word => {
+                const solved = word.cells.every((cell, index) => (userEntries[cell.key] || '') === word.answer[index]);
+                if (solved) nextSolved.add(word.id);
+            });
+
+            const shouldFinish = !hasCompletedPuzzle && nextSolved.size === puzzleWords.length;
+            solvedWords = nextSolved;
+
+            if (shouldFinish) {
+                hasCompletedPuzzle = true;
+                clearInterval(timerInterval);
+                clearSavedGameState();
+
+                setTimeout(() => {
+                    document.getElementById('final-time').textContent = timerDisplay.textContent;
+                    resetStatusBox();
+                    modal.classList.replace('hidden', 'flex');
+                    sendToGoogleSheet();
+                }, 350);
+            }
+        }
+
+        function exitGame() {
+            if (modal.classList.contains('flex') && returnHomeBtn.disabled) return;
+
+            clearInterval(timerInterval);
+            timerDisplay.textContent = '00:00';
+            elapsedSeconds = 0;
+            startTime = null;
+            activeDirection = 'across';
+            activeCellKey = getDefaultActiveKey();
+            userEntries = {};
+            solvedWords = new Set();
+            hasCompletedPuzzle = false;
+            currentUser = { name: '', office: '' };
+            syncUserDisplay();
+            clearSavedGameState();
+            modal.classList.remove('flex');
+            modal.classList.add('hidden');
+            gameScreen.classList.remove('active');
+            introScreen.classList.remove('exit');
+            introScreen.classList.add('active');
+            document.getElementById('onboarding-form').reset();
+            document.getElementById('start-btn').disabled = false;
+            document.getElementById('start-btn').textContent = 'Begin Crossword';
+            resetStatusBox();
+            renderGame({ focus: false });
+        }
+    </script>
+</body>
+</html>
