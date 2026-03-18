@@ -875,7 +875,7 @@
                 modalIconShell.className = 'modal-icon-shell w-16 h-16 bg-[rgba(246,200,95,0.22)] text-[var(--wm-plum)] rounded-full flex items-center justify-center mx-auto mb-4';
                 modalBadge.textContent = 'Celebration Complete';
                 modalTitle.textContent = 'Mabuhay!';
-                modalCongrats.textContent = `${currentUser.name}, you completed the Philippine National Women's Month crossword challenge.`;
+                modalCongrats.textContent = `${currentUser.name}, you completed the National Women's Month crossword challenge.`;
             } else if (isError) {
                 modalIconShell.className = 'modal-icon-shell w-16 h-16 bg-[rgba(225,29,72,0.12)] text-rose-600 rounded-full flex items-center justify-center mx-auto mb-4';
                 modalBadge.textContent = 'Submission Issue';
@@ -900,7 +900,7 @@
         async function sendToGoogleSheet() {
             if (SCRIPT_URL === "REPLACE_WITH_YOUR_APPS_SCRIPT_URL") {
                 setModalState('success');
-                submitStatusText.textContent = 'Answer saved locally. You may now return home.';
+                submitStatusText.textContent = 'Answer saved locally. Thanks for Participating.';
                 submitStatusLoader.classList.add('hidden');
                 submitStatus.classList.remove('status-muted', 'status-error');
                 submitStatus.classList.add('status-success');
