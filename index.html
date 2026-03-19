@@ -417,6 +417,12 @@
             box-shadow: 0 12px 22px rgba(107, 33, 95, 0.2);
         }
 
+        .active-clue-copy,
+        .active-clue-meta {
+            transition: opacity 0.22s ease, transform 0.22s ease, filter 0.22s ease;
+            will-change: opacity, transform, filter;
+        }
+
         .active-clue-copy {
             font-size: 1.05rem;
             line-height: 1.5;
@@ -428,6 +434,21 @@
         .active-clue-copy.is-placeholder {
             color: var(--wm-muted);
             font-weight: 700;
+        }
+
+        .active-clue-copy.is-transitioning,
+        .active-clue-meta.is-transitioning {
+            opacity: 0;
+            transform: translateY(0.35rem);
+            filter: blur(0.14rem);
+        }
+
+        .active-clue-meta {
+            font-size: 0.68rem;
+            font-weight: 800;
+            letter-spacing: 0.22em;
+            text-transform: uppercase;
+            color: var(--wm-orchid);
         }
 
         .status-muted {
@@ -521,6 +542,11 @@
             .active-clue-copy {
                 font-size: 1rem;
                 line-height: 1.5;
+            }
+
+            .active-clue-meta {
+                font-size: 0.62rem;
+                letter-spacing: 0.18em;
             }
 
             .crossword-grid {
@@ -661,6 +687,7 @@
                                         <span id="active-clue-badge" class="active-clue-badge">Ready</span>
                                     </div>
                                     <p id="active-clue-text" class="active-clue-copy is-placeholder mt-4">Select a clue to begin solving.</p>
+                                    <p id="active-clue-meta" class="active-clue-meta mt-3 hidden">Clue 1 of 3</p>
                                 </div>
                             </div>
 
@@ -740,15 +767,59 @@
         const IS_LOCAL_MODE = IS_TEST_MODE || SCRIPT_URL === PLACEHOLDER_SCRIPT_URL;
         const GAME_STATE_KEY = 'women-month-crossword-session';
         const MIN_BOARD_SIZE = 12;
+        const ACTIVE_CLUE_ROTATE_MS = 6000;
+        const ACTIVE_CLUE_FADE_MS = 180;
         const LEADERBOARD_LIMIT = 10;
         const LEADERBOARD_POLL_INTERVAL_MS = 15000;
         const WORD_BANK = Object.freeze({
-            wm01: { clue: 'Pre-colonial Filipina spiritual leader', length: 8 },
-            wm02: { clue: 'A trait of a strong Filipina leader', length: 9 },
-            wm03: { clue: 'Equality between men and women', length: 8 },
-            wm04: { clue: 'Deep respect for women in Filipino culture', length: 8 },
-            wm05: { clue: 'She was cleansed with "7 demons", suggesting she overcame significant spiritual or physical trauma', length: 9 },
-            wm06: { clue: 'RA 9262 public crime defined as any act or series of acts against women', length: 4 }
+            wm01: {
+                clues: [
+                    'Pre-colonial Filipina spiritual leader',
+                    'Female ritual healer in early Philippine communities',
+                    'Indigenous priestess or shaman in pre-colonial society'
+                ],
+                length: 8
+            },
+            wm02: {
+                clues: [
+                    'A trait of a strong Filipina leader',
+                    'Able to recover quickly from hardship',
+                    'Strong and adaptable despite challenges'
+                ],
+                length: 9
+            },
+            wm03: {
+                clues: [
+                    'Equality between men and women',
+                    'Equal rights, status, and opportunities for all',
+                    'Fair treatment regardless of gender'
+                ],
+                length: 8
+            },
+            wm04: {
+                clues: [
+                    'Movement advocating women\'s rights and equality',
+                    'Belief in the social, political, and economic equality of women',
+                    'Advocacy for equal rights and opportunities for women'
+                ],
+                length: 8
+            },
+            wm05: {
+                clues: [
+                    'Mary ______, follower of Jesus linked with being freed from seven demons',
+                    'Biblical title for Mary of Magdala',
+                    'Surname-like identifier of Mary from Magdala'
+                ],
+                length: 9
+            },
+            wm06: {
+                clues: [
+                    'Acronym for Violence Against Women and Children',
+                    'Four-letter abuse category covered by RA 9262',
+                    'Philippine legal shorthand for violence against women and children'
+                ],
+                length: 4
+            }
         });
 
         const PUZZLE_LAYOUTS = [
@@ -849,6 +920,7 @@
         const cluesDown = document.getElementById('clues-down');
         const activeClueText = document.getElementById('active-clue-text');
         const activeClueBadge = document.getElementById('active-clue-badge');
+        const activeClueMeta = document.getElementById('active-clue-meta');
         const testLayoutBtn = document.getElementById('test-layout-btn');
         const toggleDirectionBtn = document.getElementById('toggle-direction-btn');
         const leaderboardList = document.getElementById('leaderboard-list');
@@ -890,6 +962,10 @@
         let leaderboardEntries = [];
         let leaderboardPollTimer = null;
         let leaderboardRequestToken = 0;
+        let activeClueRotationTimer = null;
+        let activeClueFadeTimer = null;
+        let activeClueWordKey = '';
+        let activeClueVariantIndex = 0;
 
         selectPuzzleLayout(DEFAULT_PUZZLE_LAYOUT_ID);
         totalCount.textContent = puzzleWords.length;
@@ -1457,6 +1533,7 @@
         }
 
         function selectPuzzleLayout(layoutId) {
+            stopActiveClueRotation();
             currentLayoutId = getPuzzleLayoutById(layoutId).id;
             preparePuzzle(currentLayoutId);
             totalCount.textContent = puzzleWords.length;
@@ -1531,9 +1608,16 @@
                     throw new Error(`Missing word definition for ${item.key}`);
                 }
 
+                const clues = getWordClues(wordDefinition);
+                if (!clues.length) {
+                    throw new Error(`Missing clue definition for ${item.key}`);
+                }
+
                 return {
                     ...item,
                     ...wordDefinition,
+                    clue: clues[0],
+                    clues,
                     wordKey: item.key,
                     id: index,
                     number: null,
@@ -1595,6 +1679,95 @@
 
         function formatDirection(direction) {
             return direction.charAt(0).toUpperCase() + direction.slice(1);
+        }
+
+        function getWordClues(word) {
+            if (!word) return [];
+
+            const source = Array.isArray(word.clues)
+                ? word.clues
+                : (typeof word.clue === 'string' ? [word.clue] : []);
+
+            return source
+                .map(clue => typeof clue === 'string' ? clue.trim() : '')
+                .filter(Boolean);
+        }
+
+        function getPrimaryClue(word) {
+            return getWordClues(word)[0] || '';
+        }
+
+        function clearActiveClueTimers() {
+            clearInterval(activeClueRotationTimer);
+            clearTimeout(activeClueFadeTimer);
+            activeClueRotationTimer = null;
+            activeClueFadeTimer = null;
+        }
+
+        function stopActiveClueRotation() {
+            clearActiveClueTimers();
+            activeClueWordKey = '';
+            activeClueVariantIndex = 0;
+            activeClueText.classList.remove('is-transitioning');
+            activeClueMeta.classList.remove('is-transitioning');
+        }
+
+        function updateActiveClueMeta(clueCount) {
+            if (!clueCount) {
+                activeClueMeta.textContent = '';
+                activeClueMeta.classList.add('hidden');
+                return;
+            }
+
+            activeClueMeta.classList.remove('hidden');
+            activeClueMeta.textContent = clueCount > 1
+                ? `Clue ${activeClueVariantIndex + 1} of ${clueCount}`
+                : 'Single clue';
+        }
+
+        function applyActiveClueVariant(word, clueIndex) {
+            const clues = getWordClues(word);
+            if (!clues.length) {
+                activeClueText.textContent = '';
+                updateActiveClueMeta(0);
+                return;
+            }
+
+            activeClueVariantIndex = ((clueIndex % clues.length) + clues.length) % clues.length;
+            activeClueText.textContent = clues[activeClueVariantIndex];
+            updateActiveClueMeta(clues.length);
+        }
+
+        function startActiveClueRotation(word) {
+            const clues = getWordClues(word);
+
+            clearActiveClueTimers();
+            activeClueWordKey = word?.wordKey || '';
+            applyActiveClueVariant(word, 0);
+
+            if (clues.length <= 1) {
+                return;
+            }
+
+            activeClueRotationTimer = window.setInterval(() => {
+                activeClueText.classList.add('is-transitioning');
+                activeClueMeta.classList.add('is-transitioning');
+
+                activeClueFadeTimer = window.setTimeout(() => {
+                    if (activeClueWordKey !== word.wordKey) {
+                        return;
+                    }
+
+                    applyActiveClueVariant(word, activeClueVariantIndex + 1);
+
+                    requestAnimationFrame(() => {
+                        activeClueText.classList.remove('is-transitioning');
+                        activeClueMeta.classList.remove('is-transitioning');
+                    });
+
+                    activeClueFadeTimer = null;
+                }, ACTIVE_CLUE_FADE_MS);
+            }, ACTIVE_CLUE_ROTATE_MS);
         }
 
         function getDefaultActiveKey() {
@@ -2291,6 +2464,8 @@
                     const button = document.createElement('button');
                     button.type = 'button';
                     button.className = 'clue-button';
+                    const clueCount = getWordClues(word).length;
+                    const cluePreview = getPrimaryClue(word);
 
                     if (activeWord && activeWord.id === word.id) button.classList.add('active');
                     if (isWordLocked(word)) button.classList.add('found');
@@ -2299,8 +2474,8 @@
                     button.innerHTML = `
                         <span class="clue-marker">${word.number}</span>
                         <span>
-                            <span class="block text-[10px] uppercase font-extrabold tracking-[0.24em] text-[var(--wm-muted)] mb-1">${word.length} letters</span>
-                            <span class="text-sm font-medium leading-6">${word.clue}</span>
+                            <span class="block text-[10px] uppercase font-extrabold tracking-[0.24em] text-[var(--wm-muted)] mb-1">${word.length} letters${clueCount > 1 ? ` &middot; ${clueCount} clues` : ''}</span>
+                            <span class="text-sm font-medium leading-6">${cluePreview}</span>
                         </span>
                     `;
 
@@ -2321,9 +2496,12 @@
             const canToggle = activeCell ? activeCell.words.length > 1 : false;
 
             if (!activeWord) {
+                stopActiveClueRotation();
                 activeClueBadge.textContent = 'Ready';
                 activeClueText.classList.add('is-placeholder');
                 activeClueText.textContent = 'Select a clue to begin solving.';
+                activeClueMeta.classList.add('hidden');
+                activeClueMeta.textContent = '';
                 toggleDirectionBtn.disabled = true;
                 toggleDirectionBtn.textContent = 'Direction: Across';
                 return;
@@ -2331,7 +2509,13 @@
 
             activeClueBadge.textContent = `${activeWord.number} ${formatDirection(activeWord.direction)}`;
             activeClueText.classList.remove('is-placeholder');
-            activeClueText.textContent = activeWord.clue;
+
+            if (activeClueWordKey !== activeWord.wordKey) {
+                startActiveClueRotation(activeWord);
+            } else {
+                updateActiveClueMeta(getWordClues(activeWord).length);
+            }
+
             toggleDirectionBtn.disabled = !canToggle;
             toggleDirectionBtn.textContent = `Direction: ${formatDirection(activeDirection)}`;
         }
@@ -2535,6 +2719,7 @@
             if (modal.classList.contains('flex') && returnHomeBtn.disabled) return;
 
             clearInterval(timerInterval);
+            stopActiveClueRotation();
             timerDisplay.textContent = '00:00';
             elapsedSeconds = 0;
             startTime = null;
