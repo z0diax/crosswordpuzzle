@@ -258,6 +258,12 @@
                 0 18px 34px rgba(148, 64, 112, 0.24);
         }
 
+        .crossword-cell.incorrect {
+            background: linear-gradient(135deg, rgba(251, 113, 133, 0.16), rgba(255, 255, 255, 0.96));
+            border-color: rgba(225, 29, 72, 0.42);
+            box-shadow: 0 0 0 2px rgba(225, 29, 72, 0.12);
+        }
+
         .crossword-cell.solved {
             background: linear-gradient(135deg, var(--wm-plum), var(--wm-rose));
             border-color: transparent;
@@ -323,6 +329,11 @@
             border-color: rgba(246, 200, 95, 0.52);
             background: linear-gradient(135deg, rgba(246, 200, 95, 0.22), rgba(255, 255, 255, 0.92));
             box-shadow: 0 14px 28px rgba(246, 200, 95, 0.14);
+        }
+
+        .clue-button.incorrect {
+            border-color: rgba(225, 29, 72, 0.24);
+            background: linear-gradient(135deg, rgba(251, 113, 133, 0.1), rgba(255, 255, 255, 0.92));
         }
 
         .clue-button.found {
@@ -510,9 +521,14 @@
                                     <p class="text-[10px] uppercase font-extrabold tracking-[0.3em] text-[var(--wm-muted)]">Active Clue</p>
                                     <p id="active-clue-text" class="text-sm font-semibold text-[var(--wm-ink)]">Select a clue to begin solving.</p>
                                 </div>
-                                <button id="toggle-direction-btn" type="button" class="rounded-full border border-[rgba(148,64,112,0.14)] bg-white/80 px-4 py-2 text-xs font-extrabold uppercase tracking-[0.22em] text-[var(--wm-orchid)] transition hover:border-[rgba(148,64,112,0.28)] disabled:opacity-50 disabled:cursor-not-allowed">
-                                    Direction: Across
-                                </button>
+                                <div class="flex flex-wrap items-center gap-2">
+                                    <button id="check-puzzle-btn" type="button" class="rounded-full border border-[rgba(148,64,112,0.14)] bg-white/80 px-4 py-2 text-xs font-extrabold uppercase tracking-[0.22em] text-[var(--wm-orchid)] transition hover:border-[rgba(148,64,112,0.28)] disabled:opacity-50 disabled:cursor-not-allowed">
+                                        Check Puzzle
+                                    </button>
+                                    <button id="toggle-direction-btn" type="button" class="rounded-full border border-[rgba(148,64,112,0.14)] bg-white/80 px-4 py-2 text-xs font-extrabold uppercase tracking-[0.22em] text-[var(--wm-orchid)] transition hover:border-[rgba(148,64,112,0.28)] disabled:opacity-50 disabled:cursor-not-allowed">
+                                        Direction: Across
+                                    </button>
+                                </div>
                             </div>
 
                             <div id="grid-container" class="crossword-grid"></div>
@@ -564,86 +580,92 @@
                 <span id="submit-status-text">Please wait while your answer is being sent to HRMDO...</span>
             </div>
 
-            <button id="return-home-btn" onclick="exitGame()" class="theme-button w-full py-4 rounded-2xl font-bold transition" disabled type="button">Return Home</button>
+            <button id="return-home-btn" class="theme-button w-full py-4 rounded-2xl font-bold transition" disabled type="button">Return Home</button>
         </div>
     </div>
 
     <script>
-        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyJ8qcAPDPFRkL8W_qpHBYrRnoDZrA0_kZ9XEbZjBUmlaXUizYqTc_Ah4kfYCFBI6MN/exec";
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwLY1rZcOA_l4nDWdlXmvNFHnqrxAPCIBlWZUOhJRmT01Em8Zwi1WaJVI78-pd_hMwl/exec";
         const GAME_STATE_KEY = 'women-month-crossword-session';
         const MIN_BOARD_SIZE = 12;
+        const WORD_BANK = Object.freeze({
+            wm01: { clue: 'Pre-colonial Filipina spiritual leader', length: 8 },
+            wm02: { clue: 'A trait of a strong Filipina leader', length: 9 },
+            wm03: { clue: 'Equality between men and women', length: 8 },
+            wm04: { clue: 'Deep respect for women in Filipino culture', length: 8 }
+        });
 
         const PUZZLE_LAYOUTS = [
             {
                 id: 'layout-a',
                 words: [
-                    { answer: 'BABAYLAN', clue: 'Pre-colonial Filipina spiritual leader', direction: 'across', row: 4, col: 1 },
-                    { answer: 'RESILIENT', clue: 'A trait of a strong Filipina leader', direction: 'down', row: 0, col: 6 },
-                    { answer: 'EQUALITY', clue: 'Equality between men and women', direction: 'across', row: 8, col: 0 },
-                    { answer: 'FEMINISM', clue: 'Deep respect for women in Filipino culture', direction: 'down', row: 0, col: 8 }
+                    { key: 'wm01', direction: 'across', row: 4, col: 1 },
+                    { key: 'wm02', direction: 'down', row: 0, col: 6 },
+                    { key: 'wm03', direction: 'across', row: 8, col: 0 },
+                    { key: 'wm04', direction: 'down', row: 0, col: 8 }
                 ]
             },
             {
                 id: 'layout-b',
                 words: [
-                    { answer: 'BABAYLAN', clue: 'Pre-colonial Filipina spiritual leader', direction: 'across', row: 7, col: 0 },
-                    { answer: 'RESILIENT', clue: 'A trait of a strong Filipina leader', direction: 'down', row: 0, col: 7 },
-                    { answer: 'EQUALITY', clue: 'Equality between men and women', direction: 'down', row: 4, col: 1 },
-                    { answer: 'FEMINISM', clue: 'Deep respect for women in Filipino culture', direction: 'across', row: 3, col: 4 }
+                    { key: 'wm01', direction: 'across', row: 7, col: 0 },
+                    { key: 'wm02', direction: 'down', row: 0, col: 7 },
+                    { key: 'wm03', direction: 'down', row: 4, col: 1 },
+                    { key: 'wm04', direction: 'across', row: 3, col: 4 }
                 ]
             },
             {
                 id: 'layout-c',
                 words: [
-                    { answer: 'BABAYLAN', clue: 'Pre-colonial Filipina spiritual leader', direction: 'down', row: 1, col: 4 },
-                    { answer: 'RESILIENT', clue: 'A trait of a strong Filipina leader', direction: 'across', row: 6, col: 0 },
-                    { answer: 'EQUALITY', clue: 'Equality between men and women', direction: 'down', row: 0, col: 8 },
-                    { answer: 'FEMINISM', clue: 'Deep respect for women in Filipino culture', direction: 'across', row: 8, col: 0 }
+                    { key: 'wm01', direction: 'down', row: 1, col: 4 },
+                    { key: 'wm02', direction: 'across', row: 6, col: 0 },
+                    { key: 'wm03', direction: 'down', row: 0, col: 8 },
+                    { key: 'wm04', direction: 'across', row: 8, col: 0 }
                 ]
             },
             {
                 id: 'layout-d',
                 words: [
-                    { answer: 'BABAYLAN', clue: 'Pre-colonial Filipina spiritual leader', direction: 'down', row: 0, col: 4 },
-                    { answer: 'RESILIENT', clue: 'A trait of a strong Filipina leader', direction: 'across', row: 5, col: 0 },
-                    { answer: 'EQUALITY', clue: 'Equality between men and women', direction: 'across', row: 1, col: 1 },
-                    { answer: 'FEMINISM', clue: 'Deep respect for women in Filipino culture', direction: 'down', row: 4, col: 1 }
+                    { key: 'wm01', direction: 'down', row: 0, col: 4 },
+                    { key: 'wm02', direction: 'across', row: 5, col: 0 },
+                    { key: 'wm03', direction: 'across', row: 1, col: 1 },
+                    { key: 'wm04', direction: 'down', row: 4, col: 1 }
                 ]
             },
             {
                 id: 'layout-e',
                 words: [
-                    { answer: 'BABAYLAN', clue: 'Pre-colonial Filipina spiritual leader', direction: 'across', row: 7, col: 4 },
-                    { answer: 'RESILIENT', clue: 'A trait of a strong Filipina leader', direction: 'down', row: 0, col: 11 },
-                    { answer: 'EQUALITY', clue: 'Equality between men and women', direction: 'down', row: 4, col: 5 },
-                    { answer: 'FEMINISM', clue: 'Deep respect for women in Filipino culture', direction: 'across', row: 9, col: 0 }
+                    { key: 'wm01', direction: 'across', row: 7, col: 4 },
+                    { key: 'wm02', direction: 'down', row: 0, col: 11 },
+                    { key: 'wm03', direction: 'down', row: 4, col: 5 },
+                    { key: 'wm04', direction: 'across', row: 9, col: 0 }
                 ]
             },
             {
                 id: 'layout-f',
                 words: [
-                    { answer: 'BABAYLAN', clue: 'Pre-colonial Filipina spiritual leader', direction: 'down', row: 0, col: 7 },
-                    { answer: 'RESILIENT', clue: 'A trait of a strong Filipina leader', direction: 'across', row: 7, col: 0 },
-                    { answer: 'EQUALITY', clue: 'Equality between men and women', direction: 'across', row: 1, col: 4 },
-                    { answer: 'FEMINISM', clue: 'Deep respect for women in Filipino culture', direction: 'down', row: 4, col: 3 }
+                    { key: 'wm01', direction: 'down', row: 0, col: 7 },
+                    { key: 'wm02', direction: 'across', row: 7, col: 0 },
+                    { key: 'wm03', direction: 'across', row: 1, col: 4 },
+                    { key: 'wm04', direction: 'down', row: 4, col: 3 }
                 ]
             },
             {
                 id: 'layout-g',
                 words: [
-                    { answer: 'BABAYLAN', clue: 'Pre-colonial Filipina spiritual leader', direction: 'down', row: 0, col: 7 },
-                    { answer: 'RESILIENT', clue: 'A trait of a strong Filipina leader', direction: 'across', row: 7, col: 0 },
-                    { answer: 'EQUALITY', clue: 'Equality between men and women', direction: 'across', row: 1, col: 4 },
-                    { answer: 'FEMINISM', clue: 'Deep respect for women in Filipino culture', direction: 'down', row: 4, col: 5 }
+                    { key: 'wm01', direction: 'down', row: 0, col: 7 },
+                    { key: 'wm02', direction: 'across', row: 7, col: 0 },
+                    { key: 'wm03', direction: 'across', row: 1, col: 4 },
+                    { key: 'wm04', direction: 'down', row: 4, col: 5 }
                 ]
             },
             {
                 id: 'layout-h',
                 words: [
-                    { answer: 'BABAYLAN', clue: 'Pre-colonial Filipina spiritual leader', direction: 'down', row: 4, col: 7 },
-                    { answer: 'RESILIENT', clue: 'A trait of a strong Filipina leader', direction: 'across', row: 11, col: 0 },
-                    { answer: 'EQUALITY', clue: 'Equality between men and women', direction: 'across', row: 5, col: 4 },
-                    { answer: 'FEMINISM', clue: 'Deep respect for women in Filipino culture', direction: 'down', row: 0, col: 9 }
+                    { key: 'wm01', direction: 'down', row: 4, col: 7 },
+                    { key: 'wm02', direction: 'across', row: 11, col: 0 },
+                    { key: 'wm03', direction: 'across', row: 5, col: 4 },
+                    { key: 'wm04', direction: 'down', row: 0, col: 9 }
                 ]
             }
         ];
@@ -672,6 +694,7 @@
         const totalCount = document.getElementById('total-count');
         const returnHomeBtn = document.getElementById('return-home-btn');
         const startBtn = document.getElementById('start-btn');
+        const checkPuzzleBtn = document.getElementById('check-puzzle-btn');
         const cluesAcross = document.getElementById('clues-across');
         const cluesDown = document.getElementById('clues-down');
         const activeClueText = document.getElementById('active-clue-text');
@@ -682,7 +705,13 @@
         let boardRows = 0;
         let boardCols = 0;
         let userEntries = {};
-        let solvedWords = new Set();
+        let completedWords = new Set();
+        let lockedWordKeys = new Set();
+        let invalidWordKeys = new Set();
+        let validatingWordKeys = new Set();
+        let lastValidatedWordEntries = {};
+        let wordValidationRequestCounter = 0;
+        let wordValidationRequestIds = {};
         let currentUser = { name: '', email: '', office: '' };
         let startTime = null;
         let timerInterval = null;
@@ -690,6 +719,7 @@
         let activeCellKey = null;
         let activeDirection = 'across';
         let hasCompletedPuzzle = false;
+        let isSubmittingPuzzle = false;
         let isCheckingParticipantEmail = false;
         let isDuplicateParticipantEmail = false;
         let isParticipantEmailVerified = false;
@@ -697,6 +727,9 @@
         let participantEmailCheckToken = 0;
         let currentLayoutId = DEFAULT_PUZZLE_LAYOUT_ID;
         let lastStartedLayoutId = '';
+        let lastSubmissionFingerprint = '';
+        let modalActionType = 'exit';
+        let requiresManualCheck = false;
 
         selectPuzzleLayout(DEFAULT_PUZZLE_LAYOUT_ID);
         totalCount.textContent = puzzleWords.length;
@@ -706,6 +739,8 @@
         updateStartButtonState();
 
         toggleDirectionBtn.addEventListener('click', toggleActiveDirection);
+        checkPuzzleBtn.addEventListener('click', handleCheckPuzzleClick);
+        returnHomeBtn.addEventListener('click', handleModalAction);
         emailInput.addEventListener('input', handleParticipantEmailInput);
         officeInput.addEventListener('input', updateStartButtonState);
         nameInput.addEventListener('input', updateStartButtonState);
@@ -969,30 +1004,35 @@
         function preparePuzzle(layoutId = currentLayoutId) {
             const activeLayout = getPuzzleLayoutById(layoutId);
 
-            puzzleWords = activeLayout.words.map((item, index) => ({
-                ...item,
-                id: index,
-                number: null,
-                cells: []
-            }));
+            puzzleWords = activeLayout.words.map((item, index) => {
+                const wordDefinition = WORD_BANK[item.key];
+                if (!wordDefinition) {
+                    throw new Error(`Missing word definition for ${item.key}`);
+                }
+
+                return {
+                    ...item,
+                    ...wordDefinition,
+                    wordKey: item.key,
+                    id: index,
+                    number: null,
+                    cells: []
+                };
+            });
 
             puzzleCells = new Map();
             let maxRow = 0;
             let maxCol = 0;
 
             puzzleWords.forEach(word => {
-                for (let index = 0; index < word.answer.length; index++) {
+                for (let index = 0; index < word.length; index++) {
                     const row = word.row + (word.direction === 'down' ? index : 0);
                     const col = word.col + (word.direction === 'across' ? index : 0);
                     const key = getCellKey(row, col);
                     let cell = puzzleCells.get(key);
 
-                    if (cell && cell.solution !== word.answer[index]) {
-                        throw new Error(`Conflicting puzzle data at ${key}`);
-                    }
-
                     if (!cell) {
-                        cell = { key, row, col, solution: word.answer[index], words: [], number: null };
+                        cell = { key, row, col, words: [], number: null };
                         puzzleCells.set(key, cell);
                     }
 
@@ -1044,9 +1084,13 @@
             return firstAcross ? firstAcross.cells[0].key : (puzzleWords[0]?.cells[0]?.key || null);
         }
 
+        function getWordById(wordId) {
+            return puzzleWords.find(word => word.id === wordId) || null;
+        }
+
         function getWordsForCell(key) {
             const cell = puzzleCells.get(key);
-            return cell ? cell.words.map(id => puzzleWords.find(word => word.id === id)).filter(Boolean) : [];
+            return cell ? cell.words.map(id => getWordById(id)).filter(Boolean) : [];
         }
 
         function getWordForCell(key, direction = activeDirection) {
@@ -1084,6 +1128,180 @@
             return null;
         }
 
+        function getWordEntry(word) {
+            return word.cells.map(cell => userEntries[cell.key] || '').join('');
+        }
+
+        function isWordComplete(word) {
+            return word.cells.every(cell => /^[A-Z]$/.test(userEntries[cell.key] || ''));
+        }
+
+        function getSubmissionEntries() {
+            return puzzleWords.reduce((entries, word) => {
+                entries[word.wordKey] = getWordEntry(word);
+                return entries;
+            }, {});
+        }
+
+        function getSubmissionFingerprint() {
+            return puzzleWords.map(word => `${word.wordKey}:${getWordEntry(word)}`).join('|');
+        }
+
+        function clearIncorrectHighlights() {
+            if (invalidWordKeys.size) {
+                invalidWordKeys = new Set();
+            }
+        }
+
+        function isWordLocked(word) {
+            return Boolean(word) && lockedWordKeys.has(word.wordKey);
+        }
+
+        function isCellLockedKey(key) {
+            const cell = puzzleCells.get(key);
+            if (!cell) return false;
+
+            return cell.words.some(wordId => {
+                const word = getWordById(wordId);
+                return isWordLocked(word);
+            });
+        }
+
+        function cellHasIncorrectWord(cell) {
+            return cell.words.some(wordId => {
+                const word = getWordById(wordId);
+                return word ? invalidWordKeys.has(word.wordKey) : false;
+            });
+        }
+
+        function getPreferredCellForWord(word) {
+            if (!word) return null;
+
+            return word.cells.find(cell => !isCellLockedKey(cell.key) && !userEntries[cell.key])
+                || word.cells.find(cell => !isCellLockedKey(cell.key))
+                || word.cells[0]
+                || null;
+        }
+
+        function getNeighborEditableInWord(word, key, offset) {
+            const index = word.cells.findIndex(cell => cell.key === key);
+            if (index === -1) return null;
+
+            let nextIndex = index + offset;
+            while (nextIndex >= 0 && nextIndex < word.cells.length) {
+                const candidate = word.cells[nextIndex];
+                if (!isCellLockedKey(candidate.key)) {
+                    return candidate;
+                }
+                nextIndex += offset;
+            }
+
+            return null;
+        }
+
+        function ensureActiveCellIsEditable() {
+            if (!activeCellKey || !isCellLockedKey(activeCellKey)) return;
+
+            const activeWord = getActiveWord();
+            const preferredCell = getPreferredCellForWord(activeWord)
+                || puzzleWords.map(getPreferredCellForWord).find(Boolean)
+                || null;
+
+            if (preferredCell) {
+                activeCellKey = preferredCell.key;
+                if (!getWordForCell(activeCellKey, activeDirection)) {
+                    activeDirection = getWordsForCell(activeCellKey)[0]?.direction || 'across';
+                }
+            }
+        }
+
+        function clearWordValidationState(wordKey) {
+            delete lastValidatedWordEntries[wordKey];
+            delete wordValidationRequestIds[wordKey];
+            if (validatingWordKeys.has(wordKey)) {
+                validatingWordKeys = new Set([...validatingWordKeys].filter(key => key !== wordKey));
+            }
+        }
+
+        async function validateCompletedWord(word) {
+            if (!word || isWordLocked(word) || !isWordComplete(word)) return;
+
+            const entry = getWordEntry(word);
+            if (!entry || lastValidatedWordEntries[word.wordKey] === entry || validatingWordKeys.has(word.wordKey)) {
+                return;
+            }
+
+            if (SCRIPT_URL === "REPLACE_WITH_YOUR_APPS_SCRIPT_URL") {
+                const previousActiveKey = activeCellKey;
+                lockedWordKeys = new Set([...lockedWordKeys, word.wordKey]);
+                lastValidatedWordEntries[word.wordKey] = entry;
+                ensureActiveCellIsEditable();
+                renderGame({ focus: false });
+                if (activeCellKey !== previousActiveKey) {
+                    focusActiveCell(true);
+                }
+                return;
+            }
+
+            validatingWordKeys = new Set([...validatingWordKeys, word.wordKey]);
+            const requestId = ++wordValidationRequestCounter;
+            wordValidationRequestIds[word.wordKey] = requestId;
+
+            try {
+                const payload = await requestScriptJson(SCRIPT_URL, {
+                    method: 'POST',
+                    mode: 'cors',
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    body: JSON.stringify({
+                        action: 'validateWord',
+                        wordKey: word.wordKey,
+                        entry
+                    })
+                });
+
+                if (wordValidationRequestIds[word.wordKey] !== requestId) {
+                    return;
+                }
+
+                validatingWordKeys = new Set([...validatingWordKeys].filter(key => key !== word.wordKey));
+
+                if (payload.status === 'ok') {
+                    lastValidatedWordEntries[word.wordKey] = entry;
+
+                    if (payload.correct) {
+                        const previousActiveKey = activeCellKey;
+                        lockedWordKeys = new Set([...lockedWordKeys, word.wordKey]);
+                        invalidWordKeys = new Set([...invalidWordKeys].filter(key => key !== word.wordKey));
+                        ensureActiveCellIsEditable();
+                        renderGame({ focus: false });
+                        if (activeCellKey !== previousActiveKey) {
+                            focusActiveCell(true);
+                        }
+                    }
+                }
+            } catch (error) {
+                if (wordValidationRequestIds[word.wordKey] !== requestId) {
+                    return;
+                }
+
+                validatingWordKeys = new Set([...validatingWordKeys].filter(key => key !== word.wordKey));
+                delete wordValidationRequestIds[word.wordKey];
+            }
+        }
+
+        function validateCompletedWords() {
+            puzzleWords.forEach(word => {
+                if (isWordLocked(word)) return;
+
+                if (!isWordComplete(word)) {
+                    clearWordValidationState(word.wordKey);
+                    return;
+                }
+
+                validateCompletedWord(word);
+            });
+        }
+
         function updateTimerDisplay() {
             const minutes = Math.floor(elapsedSeconds / 60).toString().padStart(2, '0');
             const seconds = (elapsedSeconds % 60).toString().padStart(2, '0');
@@ -1105,9 +1323,11 @@
                 user: currentUser,
                 layoutId: currentLayoutId,
                 userEntries,
+                lockedWordKeys: Array.from(lockedWordKeys),
                 activeCellKey,
                 activeDirection,
                 startTime,
+                requiresManualCheck,
                 hasCompletedPuzzle
             };
 
@@ -1153,9 +1373,21 @@
                 activeDirection = state.activeDirection === 'down' ? 'down' : 'across';
                 activeCellKey = puzzleCells.has(state.activeCellKey) ? state.activeCellKey : getDefaultActiveKey();
                 hasCompletedPuzzle = false;
-                solvedWords = new Set();
+                isSubmittingPuzzle = false;
+                completedWords = new Set();
+                lockedWordKeys = new Set(
+                    Array.isArray(state.lockedWordKeys)
+                        ? state.lockedWordKeys.filter(wordKey => Object.prototype.hasOwnProperty.call(WORD_BANK, wordKey))
+                        : []
+                );
+                invalidWordKeys = new Set();
+                validatingWordKeys = new Set();
+                lastValidatedWordEntries = {};
+                wordValidationRequestCounter = 0;
+                wordValidationRequestIds = {};
+                lastSubmissionFingerprint = '';
+                requiresManualCheck = Boolean(state.requiresManualCheck);
                 resetStatusBox();
-                updateSolvedWords();
 
                 introScreen.classList.remove('active', 'exit');
                 gameScreen.classList.add('active');
@@ -1163,6 +1395,7 @@
                 modal.classList.remove('flex');
 
                 startTimer(Number.isFinite(state.startTime) ? state.startTime : Date.now());
+                updateWordProgress();
                 renderGame({ select: true });
             } catch (error) {
                 clearSavedGameState();
@@ -1180,6 +1413,20 @@
                 elapsedSeconds = Math.floor((Date.now() - startTime) / 1000);
                 updateTimerDisplay();
             }, 1000);
+        }
+
+        function pauseTimer() {
+            if (startTime !== null) {
+                elapsedSeconds = Math.max(0, Math.floor((Date.now() - startTime) / 1000));
+                updateTimerDisplay();
+            }
+
+            clearInterval(timerInterval);
+            saveGameState();
+        }
+
+        function resumeTimer() {
+            startTimer(Date.now() - (elapsedSeconds * 1000));
         }
 
         function setModalState(state) {
@@ -1215,17 +1462,99 @@
             submitStatusLoader.classList.remove('hidden');
             submitStatus.classList.remove('status-success', 'status-error');
             submitStatus.classList.add('status-muted');
-            returnHomeBtn.disabled = true;
+            setModalAction('exit', 'Return Home', true);
         }
 
         function unlockReturnHome() {
-            returnHomeBtn.disabled = false;
+            setModalAction('exit', 'Return Home', false);
+        }
+
+        function setModalAction(action, label, disabled = false) {
+            modalActionType = action;
+            returnHomeBtn.textContent = label;
+            returnHomeBtn.disabled = disabled;
+        }
+
+        function handleModalAction() {
+            if (returnHomeBtn.disabled) return;
+
+            if (modalActionType === 'review') {
+                modal.classList.remove('flex');
+                modal.classList.add('hidden');
+                ensureActiveCellIsEditable();
+                resumeTimer();
+                focusActiveCell(true);
+                return;
+            }
+
+            exitGame();
+        }
+
+        function updateCheckPuzzleButtonState() {
+            const canCheckPuzzle = completedWords.size === puzzleWords.length && !isSubmittingPuzzle && !hasCompletedPuzzle;
+            checkPuzzleBtn.disabled = !canCheckPuzzle;
+            checkPuzzleBtn.textContent = isSubmittingPuzzle ? 'Checking...' : 'Check Puzzle';
+        }
+
+        function handleCheckPuzzleClick() {
+            if (checkPuzzleBtn.disabled) return;
+
+            requiresManualCheck = false;
+            submitCompletedPuzzle(true);
+        }
+
+        function submitCompletedPuzzle(force = false) {
+            const submissionFingerprint = getSubmissionFingerprint();
+
+            if (!submissionFingerprint || completedWords.size !== puzzleWords.length || hasCompletedPuzzle || isSubmittingPuzzle) {
+                return;
+            }
+
+            if (!force && submissionFingerprint === lastSubmissionFingerprint) {
+                return;
+            }
+
+            lastSubmissionFingerprint = submissionFingerprint;
+            isSubmittingPuzzle = true;
+            pauseTimer();
+            renderGame({ focus: false });
+
+            setTimeout(() => {
+                document.getElementById('final-time').textContent = timerDisplay.textContent;
+                modal.classList.replace('hidden', 'flex');
+                resetStatusBox();
+                sendToGoogleSheet();
+            }, 350);
+        }
+
+        function showReviewState(title, badge, description, statusMessage, incorrectWords = [], correctWords = []) {
+            isSubmittingPuzzle = false;
+            requiresManualCheck = true;
+            if (Array.isArray(correctWords) && correctWords.length) {
+                lockedWordKeys = new Set([...lockedWordKeys, ...correctWords]);
+            }
+            invalidWordKeys = new Set(incorrectWords);
+            ensureActiveCellIsEditable();
+            setModalState('error');
+            modalBadge.textContent = badge;
+            modalTitle.textContent = title;
+            modalCongrats.textContent = description;
+            submitStatusText.textContent = statusMessage;
+            submitStatusLoader.classList.add('hidden');
+            submitStatus.classList.remove('status-muted', 'status-success');
+            submitStatus.classList.add('status-error');
+            setModalAction('review', 'Review Puzzle', false);
+            renderGame({ focus: false });
         }
 
         async function sendToGoogleSheet() {
             if (SCRIPT_URL === "REPLACE_WITH_YOUR_APPS_SCRIPT_URL") {
+                hasCompletedPuzzle = true;
+                isSubmittingPuzzle = false;
+                lockedWordKeys = new Set(puzzleWords.map(word => word.wordKey));
+                clearSavedGameState();
                 setModalState('success');
-                submitStatusText.textContent = 'Answer saved locally. Thankyou for Participating.';
+                submitStatusText.textContent = 'Validation skipped in local mode. Thank you for participating.';
                 submitStatusLoader.classList.add('hidden');
                 submitStatus.classList.remove('status-muted', 'status-error');
                 submitStatus.classList.add('status-success');
@@ -1238,6 +1567,8 @@
                 email: currentUser.email,
                 normalizedEmail: normalizeParticipantEmail(currentUser.email),
                 office: currentUser.office,
+                layoutId: currentLayoutId,
+                entries: getSubmissionEntries(),
                 time: timerDisplay.textContent,
                 seconds: elapsedSeconds
             };
@@ -1251,6 +1582,7 @@
                 });
 
                 if (payload.status === 'duplicate') {
+                    isSubmittingPuzzle = false;
                     setModalState('error');
                     submitStatusText.textContent = 'This email has already used the one allowed attempt.';
                     submitStatusLoader.classList.add('hidden');
@@ -1260,26 +1592,52 @@
                     return;
                 }
 
+                if (payload.status === 'incorrect') {
+                    showReviewState(
+                        'Check the crossword',
+                        'Answer Review',
+                        'Some answers are still incorrect. Review the highlighted clues and try again.',
+                        'The puzzle was not submitted. Correct the highlighted entries and the app will verify them again.',
+                        Array.isArray(payload.incorrectWords) ? payload.incorrectWords : [],
+                        Array.isArray(payload.correctWords) ? payload.correctWords : []
+                    );
+                    return;
+                }
+
+                hasCompletedPuzzle = true;
+                isSubmittingPuzzle = false;
+                lockedWordKeys = new Set(puzzleWords.map(word => word.wordKey));
+                invalidWordKeys = new Set();
+                clearSavedGameState();
                 setModalState('success');
-                submitStatusText.textContent = 'Answer sent successfully. Thankyou for Participating.';
+                submitStatusText.textContent = 'Answers verified and sent successfully. Thank you for participating.';
                 submitStatusLoader.classList.add('hidden');
                 submitStatus.classList.remove('status-muted', 'status-error');
                 submitStatus.classList.add('status-success');
                 unlockReturnHome();
             } catch (error) {
-                setModalState('error');
-                submitStatusText.textContent = 'We could not send the answer. You can return home and try again later.';
-                submitStatusLoader.classList.add('hidden');
-                submitStatus.classList.remove('status-muted', 'status-success');
-                submitStatus.classList.add('status-error');
-                unlockReturnHome();
+                showReviewState(
+                    'Connection issue',
+                    'Submission Issue',
+                    'We could not verify your completed crossword right now.',
+                    'Return to the puzzle and try again once the connection is stable.'
+                );
             }
         }
 
         function initGame() {
             userEntries = {};
-            solvedWords = new Set();
+            completedWords = new Set();
+            lockedWordKeys = new Set();
+            invalidWordKeys = new Set();
+            validatingWordKeys = new Set();
+            lastValidatedWordEntries = {};
+            wordValidationRequestCounter = 0;
+            wordValidationRequestIds = {};
             hasCompletedPuzzle = false;
+            isSubmittingPuzzle = false;
+            lastSubmissionFingerprint = '';
+            requiresManualCheck = false;
             activeDirection = 'across';
             activeCellKey = getDefaultActiveKey();
             foundCount.textContent = '0';
@@ -1293,7 +1651,8 @@
             renderGrid();
             renderClues();
             updateActiveClueDisplay();
-            foundCount.textContent = solvedWords.size.toString();
+            updateCheckPuzzleButtonState();
+            foundCount.textContent = lockedWordKeys.size.toString();
             saveGameState();
 
             if (options.focus !== false) {
@@ -1375,10 +1734,11 @@
                 wrapper.className = 'crossword-cell';
 
                 if (value) wrapper.classList.add('filled');
-                if (value === cell.solution) wrapper.classList.add('correct');
+                if (isCellLockedKey(key)) wrapper.classList.add('solved');
                 if (isCellInWord(key, activeWord)) wrapper.classList.add('active-word');
                 if (key === activeCellKey) wrapper.classList.add('active-cell');
-                if (cell.words.some(id => solvedWords.has(id))) wrapper.classList.add('solved');
+                if (cellHasIncorrectWord(cell)) wrapper.classList.add('incorrect');
+                input.readOnly = isCellLockedKey(key);
 
                 if (input.value !== value) {
                     input.value = value;
@@ -1405,19 +1765,20 @@
                     button.className = 'clue-button';
 
                     if (activeWord && activeWord.id === word.id) button.classList.add('active');
-                    if (solvedWords.has(word.id)) button.classList.add('found');
+                    if (isWordLocked(word)) button.classList.add('found');
+                    if (invalidWordKeys.has(word.wordKey)) button.classList.add('incorrect');
 
                     button.innerHTML = `
                         <span class="clue-marker">${word.number}</span>
                         <span>
-                            <span class="block text-[10px] uppercase font-extrabold tracking-[0.24em] text-[var(--wm-muted)] mb-1">${word.answer.length} letters</span>
+                            <span class="block text-[10px] uppercase font-extrabold tracking-[0.24em] text-[var(--wm-muted)] mb-1">${word.length} letters</span>
                             <span class="text-sm font-medium leading-6">${word.clue}</span>
                         </span>
                     `;
 
                     button.addEventListener('click', () => {
                         activeDirection = word.direction;
-                        activeCellKey = word.cells.find(cell => !userEntries[cell.key])?.key || word.cells[0].key;
+                        activeCellKey = getPreferredCellForWord(word)?.key || word.cells[0].key;
                         renderGame({ select: true });
                     });
 
@@ -1463,6 +1824,12 @@
         function handleCellFocus(event) {
             const key = event.target.dataset.key;
 
+            if (isCellLockedKey(key) && !getWordsForCell(key).some(word => !isWordLocked(word))) {
+                ensureActiveCellIsEditable();
+                renderGame({ focus: false });
+                return;
+            }
+
             if (activeCellKey === key && getWordForCell(key, activeDirection)) return;
 
             activeCellKey = key;
@@ -1477,6 +1844,15 @@
             const key = event.target.dataset.key;
             const cell = puzzleCells.get(key);
             if (!cell) return;
+
+            if (isCellLockedKey(key) && !cell.words.some(wordId => {
+                const word = getWordById(wordId);
+                return word && !isWordLocked(word);
+            })) {
+                ensureActiveCellIsEditable();
+                renderGame();
+                return;
+            }
 
             if (activeCellKey === key && cell.words.length > 1) {
                 toggleActiveDirection();
@@ -1494,20 +1870,26 @@
 
         function handleCellInput(event) {
             const key = event.target.dataset.key;
+            if (isCellLockedKey(key)) {
+                event.target.value = userEntries[key] || '';
+                return;
+            }
+
             const value = event.target.value.toUpperCase().replace(/[^A-Z]/g, '').slice(-1);
 
             activeCellKey = key;
+            clearIncorrectHighlights();
             if (value) {
                 userEntries[key] = value;
             } else {
                 delete userEntries[key];
             }
 
-            updateSolvedWords();
+            updateWordProgress();
 
             if (value) {
                 const word = getWordForCell(key, activeDirection);
-                const nextCell = word ? getNeighborInWord(word, key, 1) : null;
+                const nextCell = word ? getNeighborEditableInWord(word, key, 1) : null;
                 if (nextCell) activeCellKey = nextCell.key;
             }
 
@@ -1526,29 +1908,42 @@
 
             if (event.key === 'Backspace') {
                 event.preventDefault();
+                if (isCellLockedKey(key)) {
+                    const word = getWordForCell(key, activeDirection);
+                    const previousEditableCell = word ? getNeighborEditableInWord(word, key, -1) : null;
+                    if (previousEditableCell) {
+                        activeCellKey = previousEditableCell.key;
+                        renderGame();
+                    }
+                    return;
+                }
+
+                clearIncorrectHighlights();
 
                 if (userEntries[key]) {
                     delete userEntries[key];
                     activeCellKey = key;
                 } else {
                     const word = getWordForCell(key, activeDirection);
-                    const previousCell = word ? getNeighborInWord(word, key, -1) : null;
+                    const previousCell = word ? getNeighborEditableInWord(word, key, -1) : null;
                     if (previousCell) {
                         delete userEntries[previousCell.key];
                         activeCellKey = previousCell.key;
                     }
                 }
 
-                updateSolvedWords();
+                updateWordProgress();
                 renderGame();
                 return;
             }
 
             if (event.key === 'Delete') {
                 event.preventDefault();
+                if (isCellLockedKey(key)) return;
+                clearIncorrectHighlights();
                 delete userEntries[key];
                 activeCellKey = key;
-                updateSolvedWords();
+                updateWordProgress();
                 renderGame();
                 return;
             }
@@ -1566,7 +1961,7 @@
             activeDirection = movement.direction;
 
             const word = getWordForCell(key, movement.direction);
-            const neighbor = word ? getNeighborInWord(word, key, movement.step) : null;
+            const neighbor = word ? getNeighborEditableInWord(word, key, movement.step) : null;
             const fallback = findCellAlongAxis(key, movement.rowStep, movement.colStep);
 
             if (neighbor || fallback) {
@@ -1586,30 +1981,28 @@
             renderGame();
         }
 
-        function updateSolvedWords() {
-            const nextSolved = new Set();
+        function updateWordProgress() {
+            const nextCompleted = new Set();
 
             puzzleWords.forEach(word => {
-                const solved = word.cells.every((cell, index) => (userEntries[cell.key] || '') === word.answer[index]);
-                if (solved) nextSolved.add(word.id);
+                if (isWordComplete(word)) {
+                    nextCompleted.add(word.id);
+                }
             });
 
-            const shouldFinish = !hasCompletedPuzzle && nextSolved.size === puzzleWords.length;
-            solvedWords = nextSolved;
+            completedWords = nextCompleted;
+            validateCompletedWords();
 
-            if (shouldFinish) {
-                hasCompletedPuzzle = true;
-                clearInterval(timerInterval);
-                clearSavedGameState();
-
-                setTimeout(() => {
-                    document.getElementById('final-time').textContent = timerDisplay.textContent;
-                    modal.classList.replace('hidden', 'flex');
-
-                    resetStatusBox();
-                    sendToGoogleSheet();
-                }, 350);
+            if (completedWords.size !== puzzleWords.length) {
+                lastSubmissionFingerprint = '';
+                return;
             }
+
+            if (requiresManualCheck) {
+                return;
+            }
+
+            submitCompletedPuzzle();
         }
 
         function exitGame() {
@@ -1623,8 +2016,17 @@
             activeDirection = 'across';
             activeCellKey = getDefaultActiveKey();
             userEntries = {};
-            solvedWords = new Set();
+            completedWords = new Set();
+            lockedWordKeys = new Set();
+            invalidWordKeys = new Set();
+            validatingWordKeys = new Set();
+            lastValidatedWordEntries = {};
+            wordValidationRequestCounter = 0;
+            wordValidationRequestIds = {};
             hasCompletedPuzzle = false;
+            isSubmittingPuzzle = false;
+            lastSubmissionFingerprint = '';
+            requiresManualCheck = false;
             currentUser = { name: '', email: '', office: '' };
             syncUserDisplay();
             clearSavedGameState();
