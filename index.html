@@ -234,6 +234,23 @@
             margin: 0 auto;
         }
 
+        .board-scroll-shell {
+            overflow-x: visible;
+            overflow-y: hidden;
+        }
+
+        .crossword-grid.mobile-scrollable {
+            width: max-content;
+            max-width: none;
+        }
+
+        .crossword-grid.mobile-scrollable .crossword-cell,
+        .crossword-grid.mobile-scrollable .crossword-block {
+            width: var(--grid-cell-size);
+            height: var(--grid-cell-size);
+            flex: none;
+        }
+
         .crossword-cell,
         .crossword-block {
             aspect-ratio: 1 / 1;
@@ -515,6 +532,55 @@
             user-select: none;
         }
 
+        .leaderboard-row {
+            display: grid;
+            grid-template-columns: 3.6rem minmax(0, 1.4fr) minmax(0, 1fr) 5.5rem;
+            align-items: center;
+            gap: 0.75rem;
+            border-radius: 1.4rem;
+            border: 1px solid rgba(148, 64, 112, 0.12);
+            background: rgba(255, 255, 255, 0.72);
+            padding: 0.75rem 1rem;
+            box-shadow: 0 10px 24px rgba(107, 33, 95, 0.08);
+            overflow: hidden;
+        }
+
+        .leaderboard-rank-badge {
+            height: 2.75rem;
+            width: 2.75rem;
+            flex-shrink: 0;
+            border-radius: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.875rem;
+            font-weight: 900;
+        }
+
+        .leaderboard-name-cell {
+            min-width: 0;
+            font-size: 0.875rem;
+            font-weight: 900;
+            color: var(--wm-ink);
+        }
+
+        .leaderboard-office-cell {
+            min-width: 0;
+            font-size: 0.75rem;
+            font-weight: 700;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+            color: var(--wm-orchid);
+        }
+
+        .leaderboard-time-cell {
+            text-align: right;
+            font-size: 1.125rem;
+            font-weight: 900;
+            color: var(--wm-plum);
+            font-variant-numeric: tabular-nums;
+        }
+
         @keyframes modal-spin {
             to {
                 transform: rotate(360deg);
@@ -524,6 +590,65 @@
         @media (max-width: 640px) {
             .theme-badge {
                 letter-spacing: 0.14em;
+            }
+
+            .board-scroll-shell {
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+                overscroll-behavior-x: contain;
+                padding-bottom: 0.35rem;
+            }
+
+            .board-scroll-shell::-webkit-scrollbar {
+                height: 0.42rem;
+            }
+
+            .board-scroll-shell::-webkit-scrollbar-thumb {
+                background: rgba(148, 64, 112, 0.22);
+                border-radius: 9999px;
+            }
+
+            #leaderboard-head {
+                grid-template-columns: 3.2rem minmax(0, 1fr) 4.75rem;
+                gap: 0.5rem;
+            }
+
+            .leaderboard-head-office {
+                display: none;
+            }
+
+            .leaderboard-row {
+                grid-template-columns: 3.2rem minmax(0, 1fr) 4.75rem;
+                grid-template-areas:
+                    "rank name time"
+                    "rank office time";
+                align-items: center;
+                gap: 0.28rem 0.65rem;
+                padding: 0.8rem 0.9rem;
+            }
+
+            .leaderboard-rank-cell {
+                grid-area: rank;
+            }
+
+            .leaderboard-name-cell {
+                grid-area: name;
+                font-size: 0.82rem;
+            }
+
+            .leaderboard-office-cell {
+                grid-area: office;
+                font-size: 0.72rem;
+                letter-spacing: 0.08em;
+                white-space: normal;
+                overflow-wrap: anywhere;
+                line-height: 1.25;
+            }
+
+            .leaderboard-time-cell {
+                grid-area: time;
+                align-self: center;
+                font-size: 1rem;
             }
 
             .submit-answer-btn {
@@ -624,10 +749,10 @@
                         Loading leaderboard...
                     </p>
                     <div id="leaderboard-head" class="mt-4 hidden grid-cols-[3.6rem,minmax(0,1.4fr),minmax(0,1fr),5.5rem] items-center gap-3 px-4 text-[10px] font-extrabold uppercase tracking-[0.24em] text-[var(--wm-muted)]">
-                        <span>Rank</span>
-                        <span>Name</span>
-                        <span>Office</span>
-                        <span class="text-right">Time</span>
+                        <span class="leaderboard-head-rank">Rank</span>
+                        <span class="leaderboard-head-name">Name</span>
+                        <span class="leaderboard-head-office">Office</span>
+                        <span class="leaderboard-head-time text-right">Time</span>
                     </div>
                     <div id="leaderboard-list" class="space-y-2 mt-3 max-h-[32rem] overflow-y-auto overflow-x-hidden pr-1"></div>
                     <p id="leaderboard-updated" class="mt-4 text-[10px] font-bold uppercase tracking-[0.24em] text-[var(--wm-muted)]">
@@ -691,7 +816,9 @@
                                 </div>
                             </div>
 
-                            <div id="grid-container" class="crossword-grid"></div>
+                            <div class="board-scroll-shell">
+                                <div id="grid-container" class="crossword-grid"></div>
+                            </div>
 
                             <div class="mt-4 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
                                 <p class="text-xs text-[var(--wm-muted)] max-w-2xl">Keyboard support: arrow keys move through the board, backspace clears, and Enter toggles direction on crossing cells.</p>
@@ -766,7 +893,7 @@
         const IS_TEST_MODE = TEST_MODE || TEST_MODE_QUERY === '1' || TEST_MODE_QUERY === 'true';
         const IS_LOCAL_MODE = IS_TEST_MODE || SCRIPT_URL === PLACEHOLDER_SCRIPT_URL;
         const GAME_STATE_KEY = 'women-month-crossword-session';
-        const MIN_BOARD_SIZE = 12;
+        const MIN_BOARD_SIZE = 1;
         const ACTIVE_CLUE_ROTATE_MS = 6000;
         const ACTIVE_CLUE_FADE_MS = 180;
         const LEADERBOARD_LIMIT = 10;
@@ -987,6 +1114,7 @@
         leaderboardRefreshBtn.addEventListener('click', () => {
             loadLeaderboard({ showLoading: leaderboardEntries.length === 0 });
         });
+        window.addEventListener('resize', applyResponsiveGridSizing);
 
         document.getElementById('onboarding-form').addEventListener('submit', (event) => {
             event.preventDefault();
@@ -1255,17 +1383,19 @@
                 const office = escapeHtml(normalizedEntry.office);
 
                 return `
-                    <div class="grid grid-cols-[3.6rem,minmax(0,1.4fr),minmax(0,1fr),5.5rem] items-center gap-3 rounded-[1.4rem] border border-[rgba(148,64,112,0.12)] bg-white/72 px-4 py-3 shadow-[0_10px_24px_rgba(107,33,95,0.08)] overflow-hidden">
-                        <div class="h-11 w-11 shrink-0 rounded-2xl flex items-center justify-center text-sm font-black ${medalClass}">
-                            #${rank}
+                    <div class="leaderboard-row">
+                        <div class="leaderboard-rank-cell">
+                            <div class="leaderboard-rank-badge ${medalClass}">
+                                #${rank}
+                            </div>
                         </div>
-                        <p class="truncate text-sm font-black text-[var(--wm-ink)]">
+                        <p class="leaderboard-name-cell truncate">
                             ${name}
                         </p>
-                        <p class="truncate text-xs font-bold uppercase tracking-[0.18em] text-[var(--wm-orchid)]" title="${office}">
+                        <p class="leaderboard-office-cell" title="${office}">
                             ${office}
                         </p>
-                        <p class="text-right text-lg font-black text-[var(--wm-plum)] tabular-nums">
+                        <p class="leaderboard-time-cell">
                             ${time}
                         </p>
                     </div>
@@ -1601,6 +1731,22 @@
 
         function preparePuzzle(layoutId = currentLayoutId) {
             const activeLayout = getPuzzleLayoutById(layoutId);
+            const layoutBounds = activeLayout.words.reduce((bounds, item) => {
+                const wordDefinition = WORD_BANK[item.key];
+                if (!wordDefinition) {
+                    return bounds;
+                }
+
+                const endRow = item.row + (item.direction === 'down' ? wordDefinition.length - 1 : 0);
+                const endCol = item.col + (item.direction === 'across' ? wordDefinition.length - 1 : 0);
+
+                return {
+                    minRow: Math.min(bounds.minRow, item.row, endRow),
+                    minCol: Math.min(bounds.minCol, item.col, endCol)
+                };
+            }, { minRow: Infinity, minCol: Infinity });
+            const rowOffset = Number.isFinite(layoutBounds.minRow) ? layoutBounds.minRow : 0;
+            const colOffset = Number.isFinite(layoutBounds.minCol) ? layoutBounds.minCol : 0;
 
             puzzleWords = activeLayout.words.map((item, index) => {
                 const wordDefinition = WORD_BANK[item.key];
@@ -1616,6 +1762,8 @@
                 return {
                     ...item,
                     ...wordDefinition,
+                    row: item.row - rowOffset,
+                    col: item.col - colOffset,
                     clue: clues[0],
                     clues,
                     wordKey: item.key,
@@ -1768,6 +1916,27 @@
                     activeClueFadeTimer = null;
                 }, ACTIVE_CLUE_FADE_MS);
             }, ACTIVE_CLUE_ROTATE_MS);
+        }
+
+        function applyResponsiveGridSizing() {
+            const isMobileViewport = window.matchMedia('(max-width: 640px)').matches;
+
+            if (isMobileViewport) {
+                const isSmallMobileViewport = window.matchMedia('(max-width: 380px)').matches;
+                const cellSize = isSmallMobileViewport ? 30 : 32;
+                const cellGap = isSmallMobileViewport ? 3 : 4;
+
+                gridContainer.classList.add('mobile-scrollable');
+                gridContainer.style.setProperty('--grid-cell-size', `${cellSize}px`);
+                gridContainer.style.gridTemplateColumns = `repeat(${boardCols}, ${cellSize}px)`;
+                gridContainer.style.gap = `${cellGap}px`;
+                return;
+            }
+
+            gridContainer.classList.remove('mobile-scrollable');
+            gridContainer.style.removeProperty('--grid-cell-size');
+            gridContainer.style.removeProperty('gap');
+            gridContainer.style.gridTemplateColumns = `repeat(${boardCols}, minmax(0, 1fr))`;
         }
 
         function getDefaultActiveKey() {
@@ -2368,12 +2537,12 @@
                 buildGridStructure();
             }
 
+            applyResponsiveGridSizing();
             syncGridState();
         }
 
         function buildGridStructure() {
             gridContainer.innerHTML = '';
-            gridContainer.style.gridTemplateColumns = `repeat(${boardCols}, minmax(0, 1fr))`;
             gridContainer.dataset.gridSignature = getGridSignature();
 
             for (let row = 0; row < boardRows; row++) {
