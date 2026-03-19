@@ -468,6 +468,96 @@
             color: var(--wm-orchid);
         }
 
+        .word-reveal-card {
+            border: 1px solid rgba(148, 64, 112, 0.14);
+            background:
+                linear-gradient(135deg, rgba(255, 255, 255, 0.96), rgba(253, 246, 250, 0.9)),
+                rgba(255, 255, 255, 0.92);
+            box-shadow:
+                inset 0 1px 0 rgba(255, 255, 255, 0.72),
+                0 10px 24px rgba(107, 33, 95, 0.07);
+        }
+
+        .word-reveal-columns {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 0.85rem;
+        }
+
+        .word-reveal-column {
+            min-width: 0;
+        }
+
+        .word-reveal-heading {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-size: 0.66rem;
+            font-weight: 900;
+            letter-spacing: 0.22em;
+            text-transform: uppercase;
+            color: var(--wm-orchid);
+        }
+
+        .word-reveal-stack {
+            border-top: 1px solid rgba(148, 64, 112, 0.1);
+        }
+
+        .word-reveal-row {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            gap: 0.55rem;
+            appearance: none;
+            -webkit-appearance: none;
+            border: none;
+            padding: 0.55rem 0;
+            text-align: left;
+            border-bottom: 1px solid rgba(148, 64, 112, 0.08);
+            background: transparent;
+            transition: background-color 0.16s ease, transform 0.16s ease;
+        }
+
+        .word-reveal-row:active {
+            transform: scale(0.99);
+        }
+
+        .word-reveal-row.active {
+            background: linear-gradient(135deg, rgba(246, 200, 95, 0.14), rgba(255, 255, 255, 0.2));
+            border-radius: 0.85rem;
+            padding-inline: 0.38rem;
+            margin-inline: -0.38rem;
+        }
+
+        .word-reveal-index {
+            flex-shrink: 0;
+            min-width: 1rem;
+            font-size: 0.68rem;
+            font-weight: 900;
+            color: var(--wm-orchid);
+        }
+
+        .word-reveal-answer {
+            display: block;
+            min-width: 0;
+            font-size: 0.76rem;
+            font-weight: 900;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: var(--wm-ink);
+            line-height: 1.2;
+            word-break: break-word;
+        }
+
+        .word-reveal-answer.is-blurred {
+            filter: blur(0.24rem);
+            opacity: 0.82;
+            user-select: none;
+        }
+
+        .word-reveal-row.solved .word-reveal-answer {
+            color: var(--wm-plum);
+        }
+
         .status-muted {
             color: var(--wm-muted);
         }
@@ -674,6 +764,30 @@
                 letter-spacing: 0.18em;
             }
 
+            .word-reveal-columns {
+                gap: 0.7rem;
+            }
+
+            .word-reveal-heading {
+                font-size: 0.62rem;
+                letter-spacing: 0.18em;
+            }
+
+            .word-reveal-row {
+                gap: 0.42rem;
+                padding-block: 0.48rem;
+            }
+
+            .word-reveal-index {
+                min-width: 0.9rem;
+                font-size: 0.62rem;
+            }
+
+            .word-reveal-answer {
+                font-size: 0.7rem;
+                letter-spacing: 0.04em;
+            }
+
             .crossword-grid {
                 gap: 0.22rem;
             }
@@ -736,11 +850,6 @@
 
                 <div class="w-full xl:flex-1 theme-panel rounded-[2rem] p-6 md:p-8">
                     <div class="mb-6 border-b border-[rgba(148,64,112,0.12)] pb-4">
-                        <div class="flex justify-end mb-4">
-                            <button id="leaderboard-refresh-btn" type="button" class="rounded-full border border-[rgba(148,64,112,0.14)] bg-white/80 px-4 py-2 text-[10px] font-extrabold uppercase tracking-[0.22em] text-[var(--wm-orchid)] transition hover:border-[rgba(148,64,112,0.28)]">
-                                Refresh
-                            </button>
-                        </div>
                         <div class="text-center">
                             <h2 class="display-font text-4xl text-[var(--wm-plum)] leading-none">Leaderboards</h2>
                         </div>
@@ -804,7 +913,15 @@
                             <p class="text-xs text-[var(--wm-muted)] max-w-xs">Tap a clue or square, then type letters to fill the puzzle. Click the same square again to switch direction.</p>
                         </div>
 
-                        <div class="rounded-[1.5rem] bg-[rgba(255,255,255,0.68)] p-4 md:p-5 shadow-inner border border-[rgba(148,64,112,0.12)]">
+                        <div id="crossword-board-panel" class="rounded-[1.5rem] bg-[rgba(255,255,255,0.68)] p-4 md:p-5 shadow-inner border border-[rgba(148,64,112,0.12)]">
+                            <div id="word-reveal-card" class="word-reveal-card rounded-[1.35rem] px-4 py-4 sm:hidden mb-4">
+                                <div class="flex items-center justify-between gap-3 mb-3">
+                                    <p class="text-[10px] uppercase font-extrabold tracking-[0.3em] text-[var(--wm-muted)]">Words To Reveal</p>
+                                    <p id="word-reveal-count" class="text-[10px] uppercase font-extrabold tracking-[0.24em] text-[var(--wm-orchid)]">0/6 solved</p>
+                                </div>
+                                <div id="word-reveal-list" class="word-reveal-columns"></div>
+                            </div>
+
                             <div class="mb-4">
                                 <div class="active-clue-panel rounded-[1.35rem] px-4 py-4 sm:px-5 sm:py-5">
                                     <div class="flex flex-wrap items-center gap-3">
@@ -816,7 +933,7 @@
                                 </div>
                             </div>
 
-                            <div class="board-scroll-shell">
+                            <div id="board-scroll-shell" class="board-scroll-shell">
                                 <div id="grid-container" class="crossword-grid"></div>
                             </div>
 
@@ -837,19 +954,13 @@
                         </div>
                     </div>
 
-                    <div class="w-full lg:w-80 flex flex-col">
+                    <div class="hidden sm:flex w-full lg:w-80 flex-col">
                         <div class="theme-panel rounded-[2rem] p-6 flex-1">
-                            <h2 class="text-sm font-black text-[var(--wm-muted)] uppercase tracking-[0.3em] mb-5 border-b border-[rgba(148,64,112,0.12)] pb-3">Filipina Clues</h2>
-                            <div class="space-y-6">
-                                <div>
-                                    <h3 class="text-xs font-bold text-[var(--wm-orchid)] uppercase mb-3 tracking-[0.24em]">Across</h3>
-                                    <ul id="clues-across" class="space-y-3"></ul>
-                                </div>
-                                <div>
-                                    <h3 class="text-xs font-bold text-[var(--wm-orchid)] uppercase mb-3 tracking-[0.24em]">Down</h3>
-                                    <ul id="clues-down" class="space-y-3"></ul>
-                                </div>
+                            <div class="flex items-center justify-between gap-3 mb-5 border-b border-[rgba(148,64,112,0.12)] pb-3">
+                                <h2 class="text-sm font-black text-[var(--wm-muted)] uppercase tracking-[0.3em]">Words To Reveal</h2>
+                                <p id="word-reveal-count-desktop" class="text-[10px] uppercase font-extrabold tracking-[0.24em] text-[var(--wm-orchid)]">0/6 solved</p>
                             </div>
+                            <div id="word-reveal-list-desktop" class="word-reveal-columns"></div>
                         </div>
                     </div>
                 </div>
@@ -896,10 +1007,15 @@
         const MIN_BOARD_SIZE = 1;
         const ACTIVE_CLUE_ROTATE_MS = 6000;
         const ACTIVE_CLUE_FADE_MS = 180;
-        const LEADERBOARD_LIMIT = 10;
+        const GUIDED_BOARD_SCROLL_Y_MS = 700;
+        const GUIDED_BOARD_NUDGE_X_MS = 520;
+        const GUIDED_BOARD_PAUSE_MS = 220;
+        const GUIDED_BOARD_NUDGE_PX = 92;
+        const LEADERBOARD_LIMIT = 4;
         const LEADERBOARD_POLL_INTERVAL_MS = 15000;
         const WORD_BANK = Object.freeze({
             wm01: {
+                answer: 'BABAYLAN',
                 clues: [
                     'Pre-colonial Filipina spiritual leader',
                     'Female ritual healer in early Philippine communities',
@@ -908,6 +1024,7 @@
                 length: 8
             },
             wm02: {
+                answer: 'RESILIENT',
                 clues: [
                     'A trait of a strong Filipina leader',
                     'Able to recover quickly from hardship',
@@ -916,6 +1033,7 @@
                 length: 9
             },
             wm03: {
+                answer: 'EQUALITY',
                 clues: [
                     'Equality between men and women',
                     'Equal rights, status, and opportunities for all',
@@ -924,6 +1042,7 @@
                 length: 8
             },
             wm04: {
+                answer: 'FEMINISM',
                 clues: [
                     'Movement advocating women\'s rights and equality',
                     'Belief in the social, political, and economic equality of women',
@@ -932,6 +1051,7 @@
                 length: 8
             },
             wm05: {
+                answer: 'MAGDALENE',
                 clues: [
                     'Mary ______, follower of Jesus linked with being freed from seven demons',
                     'Biblical title for Mary of Magdala',
@@ -940,6 +1060,7 @@
                 length: 9
             },
             wm06: {
+                answer: 'VAWC',
                 clues: [
                     'Acronym for Violence Against Women and Children',
                     'Four-letter abuse category covered by RA 9262',
@@ -1025,6 +1146,8 @@
         const emailInput = document.getElementById('user-email');
         const emailCheckStatus = document.getElementById('email-check-status');
         const officeInput = document.getElementById('user-office');
+        const crosswordBoardPanel = document.getElementById('crossword-board-panel');
+        const boardScrollShell = document.getElementById('board-scroll-shell');
         const gridContainer = document.getElementById('grid-container');
         const modal = document.getElementById('modal');
         const modalIconShell = document.getElementById('modal-icon-shell');
@@ -1043,18 +1166,19 @@
         const returnHomeBtn = document.getElementById('return-home-btn');
         const startBtn = document.getElementById('start-btn');
         const checkPuzzleBtn = document.getElementById('check-puzzle-btn');
-        const cluesAcross = document.getElementById('clues-across');
-        const cluesDown = document.getElementById('clues-down');
         const activeClueText = document.getElementById('active-clue-text');
         const activeClueBadge = document.getElementById('active-clue-badge');
         const activeClueMeta = document.getElementById('active-clue-meta');
+        const wordRevealList = document.getElementById('word-reveal-list');
+        const wordRevealCount = document.getElementById('word-reveal-count');
+        const wordRevealListDesktop = document.getElementById('word-reveal-list-desktop');
+        const wordRevealCountDesktop = document.getElementById('word-reveal-count-desktop');
         const testLayoutBtn = document.getElementById('test-layout-btn');
         const toggleDirectionBtn = document.getElementById('toggle-direction-btn');
         const leaderboardList = document.getElementById('leaderboard-list');
         const leaderboardHead = document.getElementById('leaderboard-head');
         const leaderboardStatus = document.getElementById('leaderboard-status');
         const leaderboardUpdated = document.getElementById('leaderboard-updated');
-        const leaderboardRefreshBtn = document.getElementById('leaderboard-refresh-btn');
 
         let puzzleWords = [];
         let puzzleCells = new Map();
@@ -1093,6 +1217,9 @@
         let activeClueFadeTimer = null;
         let activeClueWordKey = '';
         let activeClueVariantIndex = 0;
+        let guidedBoardIntroToken = 0;
+        let guidedBoardIntroCleanup = null;
+        let hasShownGuidedBoardIntro = false;
 
         selectPuzzleLayout(DEFAULT_PUZZLE_LAYOUT_ID);
         totalCount.textContent = puzzleWords.length;
@@ -1111,9 +1238,6 @@
         emailInput.addEventListener('input', handleParticipantEmailInput);
         officeInput.addEventListener('input', updateStartButtonState);
         nameInput.addEventListener('input', updateStartButtonState);
-        leaderboardRefreshBtn.addEventListener('click', () => {
-            loadLeaderboard({ showLoading: leaderboardEntries.length === 0 });
-        });
         window.addEventListener('resize', applyResponsiveGridSizing);
 
         document.getElementById('onboarding-form').addEventListener('submit', (event) => {
@@ -1368,7 +1492,7 @@
             leaderboardHead.classList.remove('hidden');
             leaderboardHead.classList.add('grid');
 
-            leaderboardList.innerHTML = leaderboardEntries.map((entry, index) => {
+            leaderboardList.innerHTML = leaderboardEntries.slice(0, LEADERBOARD_LIMIT).map((entry, index) => {
                 const normalizedEntry = normalizeLeaderboardEntry(entry, index);
                 const rank = normalizedEntry.rank;
                 const medalClass = rank === 1
@@ -1724,8 +1848,9 @@
             setTimeout(() => {
                 introScreen.classList.remove('active', 'exit');
                 gameScreen.classList.add('active');
+                renderGame({ focus: false });
                 startTimer();
-                focusActiveCell(true);
+                runGuidedBoardIntro();
             }, 500);
         }
 
@@ -1758,12 +1883,17 @@
                 if (!clues.length) {
                     throw new Error(`Missing clue definition for ${item.key}`);
                 }
+                const answer = String(wordDefinition.answer || '').trim().toUpperCase();
+                if (!answer) {
+                    throw new Error(`Missing answer definition for ${item.key}`);
+                }
 
                 return {
                     ...item,
                     ...wordDefinition,
                     row: item.row - rowOffset,
                     col: item.col - colOffset,
+                    answer,
                     clue: clues[0],
                     clues,
                     wordKey: item.key,
@@ -1852,12 +1982,16 @@
             activeClueFadeTimer = null;
         }
 
+        function resetActiveClueTransitionState() {
+            activeClueText.classList.remove('is-transitioning');
+            activeClueMeta.classList.remove('is-transitioning');
+        }
+
         function stopActiveClueRotation() {
             clearActiveClueTimers();
             activeClueWordKey = '';
             activeClueVariantIndex = 0;
-            activeClueText.classList.remove('is-transitioning');
-            activeClueMeta.classList.remove('is-transitioning');
+            resetActiveClueTransitionState();
         }
 
         function updateActiveClueMeta(clueCount) {
@@ -1890,6 +2024,7 @@
             const clues = getWordClues(word);
 
             clearActiveClueTimers();
+            resetActiveClueTransitionState();
             activeClueWordKey = word?.wordKey || '';
             applyActiveClueVariant(word, 0);
 
@@ -1916,6 +2051,202 @@
                     activeClueFadeTimer = null;
                 }, ACTIVE_CLUE_FADE_MS);
             }, ACTIVE_CLUE_ROTATE_MS);
+        }
+
+        function waitForGuidedBoardStep(duration, token) {
+            return new Promise(resolve => {
+                window.setTimeout(() => {
+                    resolve(token === guidedBoardIntroToken);
+                }, duration);
+            });
+        }
+
+        function animateGuidedBoardValue({ from, to, duration, onUpdate, token }) {
+            return new Promise(resolve => {
+                if (token !== guidedBoardIntroToken) {
+                    resolve(false);
+                    return;
+                }
+
+                if (!duration || Math.abs(to - from) < 1) {
+                    onUpdate(to);
+                    resolve(token === guidedBoardIntroToken);
+                    return;
+                }
+
+                const startTime = performance.now();
+                const ease = (progress) => progress < 0.5
+                    ? 4 * progress * progress * progress
+                    : 1 - Math.pow(-2 * progress + 2, 3) / 2;
+
+                const step = (now) => {
+                    if (token !== guidedBoardIntroToken) {
+                        resolve(false);
+                        return;
+                    }
+
+                    const elapsed = now - startTime;
+                    const progress = Math.min(1, elapsed / duration);
+                    const value = from + ((to - from) * ease(progress));
+                    onUpdate(value);
+
+                    if (progress < 1) {
+                        requestAnimationFrame(step);
+                        return;
+                    }
+
+                    resolve(true);
+                };
+
+                onUpdate(from);
+                requestAnimationFrame(step);
+            });
+        }
+
+        function cleanupGuidedBoardIntroListeners() {
+            if (!guidedBoardIntroCleanup) {
+                return;
+            }
+
+            guidedBoardIntroCleanup();
+            guidedBoardIntroCleanup = null;
+        }
+
+        function cancelGuidedBoardIntro(options = {}) {
+            const { reset = false } = options;
+
+            guidedBoardIntroToken += 1;
+            cleanupGuidedBoardIntroListeners();
+
+            if (reset) {
+                hasShownGuidedBoardIntro = false;
+            }
+        }
+
+        function attachGuidedBoardIntroInterruptions(token) {
+            const cancelOnInteraction = () => {
+                if (token !== guidedBoardIntroToken) {
+                    return;
+                }
+
+                cancelGuidedBoardIntro();
+            };
+
+            const listeners = [
+                ['pointerdown', window, cancelOnInteraction, { passive: true }],
+                ['touchstart', window, cancelOnInteraction, { passive: true }],
+                ['wheel', window, cancelOnInteraction, { passive: true }],
+                ['keydown', window, cancelOnInteraction]
+            ];
+
+            listeners.forEach(([eventName, target, handler, options]) => {
+                target.addEventListener(eventName, handler, options);
+            });
+
+            return () => {
+                listeners.forEach(([eventName, target, handler, options]) => {
+                    target.removeEventListener(eventName, handler, options);
+                });
+            };
+        }
+
+        function shouldRunGuidedBoardIntro() {
+            return window.matchMedia('(max-width: 640px)').matches
+                && !window.matchMedia('(prefers-reduced-motion: reduce)').matches
+                && gameScreen.classList.contains('active')
+                && Boolean(crosswordBoardPanel)
+                && Boolean(boardScrollShell);
+        }
+
+        async function runGuidedBoardIntro() {
+            if (hasShownGuidedBoardIntro || !shouldRunGuidedBoardIntro()) {
+                focusActiveCell(true);
+                return;
+            }
+
+            hasShownGuidedBoardIntro = true;
+            cancelGuidedBoardIntro();
+
+            const token = guidedBoardIntroToken;
+            guidedBoardIntroCleanup = attachGuidedBoardIntroInterruptions(token);
+
+            await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+
+            if (token !== guidedBoardIntroToken) {
+                cleanupGuidedBoardIntroListeners();
+                return;
+            }
+
+            const scrollAnchor = boardScrollShell || crosswordBoardPanel;
+            const targetTop = Math.max(
+                0,
+                scrollAnchor.getBoundingClientRect().top + window.scrollY - 12
+            );
+
+            const didScrollToBoard = await animateGuidedBoardValue({
+                from: window.scrollY,
+                to: targetTop,
+                duration: GUIDED_BOARD_SCROLL_Y_MS,
+                onUpdate: (value) => {
+                    window.scrollTo(0, value);
+                },
+                token
+            });
+
+            if (!didScrollToBoard || token !== guidedBoardIntroToken) {
+                cleanupGuidedBoardIntroListeners();
+                return;
+            }
+
+            const maxHorizontalScroll = Math.max(0, boardScrollShell.scrollWidth - boardScrollShell.clientWidth);
+            const nudgeDistance = Math.min(maxHorizontalScroll, GUIDED_BOARD_NUDGE_PX);
+
+            if (nudgeDistance > 12) {
+                const shouldContinue = await waitForGuidedBoardStep(GUIDED_BOARD_PAUSE_MS, token);
+                if (!shouldContinue || token !== guidedBoardIntroToken) {
+                    cleanupGuidedBoardIntroListeners();
+                    return;
+                }
+
+                const nudgedRight = await animateGuidedBoardValue({
+                    from: boardScrollShell.scrollLeft,
+                    to: nudgeDistance,
+                    duration: GUIDED_BOARD_NUDGE_X_MS,
+                    onUpdate: (value) => {
+                        boardScrollShell.scrollLeft = value;
+                    },
+                    token
+                });
+
+                if (!nudgedRight || token !== guidedBoardIntroToken) {
+                    cleanupGuidedBoardIntroListeners();
+                    return;
+                }
+
+                const shouldReturn = await waitForGuidedBoardStep(GUIDED_BOARD_PAUSE_MS, token);
+                if (!shouldReturn || token !== guidedBoardIntroToken) {
+                    cleanupGuidedBoardIntroListeners();
+                    return;
+                }
+
+                const returnedLeft = await animateGuidedBoardValue({
+                    from: boardScrollShell.scrollLeft,
+                    to: 0,
+                    duration: GUIDED_BOARD_NUDGE_X_MS,
+                    onUpdate: (value) => {
+                        boardScrollShell.scrollLeft = value;
+                    },
+                    token
+                });
+
+                if (!returnedLeft || token !== guidedBoardIntroToken) {
+                    cleanupGuidedBoardIntroListeners();
+                    return;
+                }
+            }
+
+            cleanupGuidedBoardIntroListeners();
+            focusActiveCell(true);
         }
 
         function applyResponsiveGridSizing() {
@@ -2496,6 +2827,7 @@
         }
 
         function initGame() {
+            cancelGuidedBoardIntro({ reset: true });
             userEntries = {};
             completedWords = new Set();
             lockedWordKeys = new Set();
@@ -2519,7 +2851,7 @@
 
         function renderGame(options = {}) {
             renderGrid();
-            renderClues();
+            renderWordRevealCard();
             updateActiveClueDisplay();
             updateCheckPuzzleButtonState();
             foundCount.textContent = lockedWordKeys.size.toString();
@@ -2616,47 +2948,67 @@
             });
         }
 
-        function renderClues() {
-            renderClueList(cluesAcross, 'across');
-            renderClueList(cluesDown, 'down');
-        }
+        function renderWordRevealCard() {
+            if (!wordRevealList || !wordRevealCount || !wordRevealListDesktop || !wordRevealCountDesktop) {
+                return;
+            }
 
-        function renderClueList(container, direction) {
-            container.innerHTML = '';
             const activeWord = getActiveWord();
+            const solvedCount = lockedWordKeys.size;
+            const renderDirectionColumn = (direction, label) => {
+                const words = puzzleWords
+                    .filter(word => word.direction === direction)
+                    .sort((left, right) => left.number - right.number);
 
-            puzzleWords
-                .filter(word => word.direction === direction)
-                .sort((left, right) => left.number - right.number)
-                .forEach(word => {
-                    const item = document.createElement('li');
-                    const button = document.createElement('button');
-                    button.type = 'button';
-                    button.className = 'clue-button';
-                    const clueCount = getWordClues(word).length;
-                    const cluePreview = getPrimaryClue(word);
+                const rows = words.map(word => {
+                    const isSolved = isWordLocked(word);
+                    const isActive = activeWord && activeWord.id === word.id;
+                    const answerMarkup = `<span class="word-reveal-answer${isSolved ? '' : ' is-blurred'}" aria-hidden="${isSolved ? 'false' : 'true'}">${escapeHtml(word.answer)}</span>`;
 
-                    if (activeWord && activeWord.id === word.id) button.classList.add('active');
-                    if (isWordLocked(word)) button.classList.add('found');
-                    if (invalidWordKeys.has(word.wordKey)) button.classList.add('incorrect');
-
-                    button.innerHTML = `
-                        <span class="clue-marker">${word.number}</span>
-                        <span>
-                            <span class="block text-[10px] uppercase font-extrabold tracking-[0.24em] text-[var(--wm-muted)] mb-1">${word.length} letters${clueCount > 1 ? ` &middot; ${clueCount} clues` : ''}</span>
-                            <span class="text-sm font-medium leading-6">${cluePreview}</span>
-                        </span>
+                    return `
+                        <button
+                            type="button"
+                            class="word-reveal-row${isActive ? ' active' : ''}${isSolved ? ' solved' : ''}"
+                            data-word-id="${word.id}"
+                            aria-label="${escapeHtml(`${word.number} ${label} ${isSolved ? word.answer : 'hidden word'}`)}"
+                        >
+                            <span class="word-reveal-index">${word.number}</span>
+                            ${answerMarkup}
+                        </button>
                     `;
+                }).join('');
 
-                    button.addEventListener('click', () => {
-                        activeDirection = word.direction;
-                        activeCellKey = getPreferredCellForWord(word)?.key || word.cells[0].key;
-                        renderGame({ select: true });
-                    });
+                return `
+                    <div class="word-reveal-column">
+                        <span class="word-reveal-heading">${label}</span>
+                        <div class="word-reveal-stack">
+                            ${rows}
+                        </div>
+                    </div>
+                `;
+            };
 
-                    item.appendChild(button);
-                    container.appendChild(item);
+            wordRevealCount.textContent = `${solvedCount}/${puzzleWords.length} solved`;
+            wordRevealCountDesktop.textContent = `${solvedCount}/${puzzleWords.length} solved`;
+            const revealMarkup = `
+                ${renderDirectionColumn('down', 'Down')}
+                ${renderDirectionColumn('across', 'Across')}
+            `;
+            wordRevealList.innerHTML = revealMarkup;
+            wordRevealListDesktop.innerHTML = revealMarkup;
+
+            document.querySelectorAll('#word-reveal-list [data-word-id], #word-reveal-list-desktop [data-word-id]').forEach(button => {
+                button.addEventListener('click', () => {
+                    const word = getWordById(Number(button.dataset.wordId));
+                    if (!word) {
+                        return;
+                    }
+
+                    activeDirection = word.direction;
+                    activeCellKey = getPreferredCellForWord(word)?.key || word.cells[0].key;
+                    renderGame({ select: true });
                 });
+            });
         }
 
         function updateActiveClueDisplay() {
@@ -2888,6 +3240,7 @@
             if (modal.classList.contains('flex') && returnHomeBtn.disabled) return;
 
             clearInterval(timerInterval);
+            cancelGuidedBoardIntro({ reset: true });
             stopActiveClueRotation();
             timerDisplay.textContent = '00:00';
             elapsedSeconds = 0;
