@@ -1015,7 +1015,6 @@
         const LEADERBOARD_POLL_INTERVAL_MS = 15000;
         const WORD_BANK = Object.freeze({
             wm01: {
-                answer: 'BABAYLAN',
                 clues: [
                     'Pre-colonial Filipina spiritual leader',
                     'Female ritual healer in early Philippine communities',
@@ -1024,7 +1023,6 @@
                 length: 8
             },
             wm02: {
-                answer: 'RESILIENT',
                 clues: [
                     'A trait of a strong Filipina leader',
                     'Able to recover quickly from hardship',
@@ -1033,7 +1031,6 @@
                 length: 9
             },
             wm03: {
-                answer: 'EQUALITY',
                 clues: [
                     'Equality between men and women',
                     'Equal rights, status, and opportunities for all',
@@ -1042,7 +1039,6 @@
                 length: 8
             },
             wm04: {
-                answer: 'FEMINISM',
                 clues: [
                     'Movement advocating women\'s rights and equality',
                     'Belief in the social, political, and economic equality of women',
@@ -1051,7 +1047,6 @@
                 length: 8
             },
             wm05: {
-                answer: 'MAGDALENE',
                 clues: [
                     'Mary ______, follower of Jesus linked with being freed from seven demons',
                     'Biblical title for Mary of Magdala',
@@ -1060,7 +1055,6 @@
                 length: 9
             },
             wm06: {
-                answer: 'VAWC',
                 clues: [
                     'Acronym for Violence Against Women and Children',
                     'Four-letter abuse category covered by RA 9262',
@@ -1198,6 +1192,7 @@
         let elapsedSeconds = 0;
         let activeCellKey = null;
         let activeDirection = 'across';
+        let pendingCellPointerDown = null;
         let hasCompletedPuzzle = false;
         let isSubmittingPuzzle = false;
         let isCheckingParticipantEmail = false;
@@ -1546,7 +1541,7 @@
             const requestToken = ++leaderboardRequestToken;
 
             if (showLoading && !leaderboardEntries.length) {
-                setLeaderboardStatus('loading', 'Loading fastest finishers...');
+                setLeaderboardStatus('loading', 'Loading data...');
             }
 
             try {
@@ -1883,9 +1878,9 @@
                 if (!clues.length) {
                     throw new Error(`Missing clue definition for ${item.key}`);
                 }
-                const answer = String(wordDefinition.answer || '').trim().toUpperCase();
-                if (!answer) {
-                    throw new Error(`Missing answer definition for ${item.key}`);
+                const length = Number(wordDefinition.length || 0);
+                if (!Number.isInteger(length) || length < 1) {
+                    throw new Error(`Missing length definition for ${item.key}`);
                 }
 
                 return {
@@ -1893,7 +1888,7 @@
                     ...wordDefinition,
                     row: item.row - rowOffset,
                     col: item.col - colOffset,
-                    answer,
+                    length,
                     clue: clues[0],
                     clues,
                     wordKey: item.key,
@@ -2324,6 +2319,15 @@
 
         function getWordEntry(word) {
             return word.cells.map(cell => userEntries[cell.key] || '').join('');
+        }
+
+        function getWordRevealText(word) {
+            if (!word) return '';
+            if (isWordLocked(word)) {
+                return getWordEntry(word);
+            }
+
+            return '?'.repeat(Math.max(0, Number(word.length) || 0));
         }
 
         function isWordComplete(word) {
@@ -2913,6 +2917,7 @@
                     input.inputMode = 'text';
                     input.enterKeyHint = 'next';
                     input.setAttribute('aria-label', `Row ${row + 1}, column ${col + 1}`);
+                    input.addEventListener('pointerdown', handleCellPointerDown);
                     input.addEventListener('focus', handleCellFocus);
                     input.addEventListener('click', handleCellClick);
                     input.addEventListener('input', handleCellInput);
@@ -2963,14 +2968,15 @@
                 const rows = words.map(word => {
                     const isSolved = isWordLocked(word);
                     const isActive = activeWord && activeWord.id === word.id;
-                    const answerMarkup = `<span class="word-reveal-answer${isSolved ? '' : ' is-blurred'}" aria-hidden="${isSolved ? 'false' : 'true'}">${escapeHtml(word.answer)}</span>`;
+                    const revealedText = getWordRevealText(word);
+                    const answerMarkup = `<span class="word-reveal-answer${isSolved ? '' : ' is-blurred'}" aria-hidden="${isSolved ? 'false' : 'true'}">${escapeHtml(revealedText)}</span>`;
 
                     return `
                         <button
                             type="button"
                             class="word-reveal-row${isActive ? ' active' : ''}${isSolved ? ' solved' : ''}"
                             data-word-id="${word.id}"
-                            aria-label="${escapeHtml(`${word.number} ${label} ${isSolved ? word.answer : 'hidden word'}`)}"
+                            aria-label="${escapeHtml(`${word.number} ${label} ${isSolved ? revealedText : `${word.length}-letter word`}`)}"
                         >
                             <span class="word-reveal-index">${word.number}</span>
                             ${answerMarkup}
@@ -3058,6 +3064,15 @@
             });
         }
 
+        function handleCellPointerDown(event) {
+            const key = event.target.dataset.key;
+            pendingCellPointerDown = {
+                key,
+                wasActive: activeCellKey === key,
+                timestamp: Date.now()
+            };
+        }
+
         function handleCellFocus(event) {
             const key = event.target.dataset.key;
 
@@ -3082,6 +3097,14 @@
             const cell = puzzleCells.get(key);
             if (!cell) return;
 
+            const pointerDownStartedOnActiveCell = Boolean(
+                pendingCellPointerDown
+                && pendingCellPointerDown.key === key
+                && pendingCellPointerDown.wasActive
+                && (Date.now() - pendingCellPointerDown.timestamp) < 1000
+            );
+            pendingCellPointerDown = null;
+
             if (isCellLockedKey(key) && !cell.words.some(wordId => {
                 const word = getWordById(wordId);
                 return word && !isWordLocked(word);
@@ -3091,7 +3114,7 @@
                 return;
             }
 
-            if (activeCellKey === key && cell.words.length > 1) {
+            if (pointerDownStartedOnActiveCell && cell.words.length > 1) {
                 toggleActiveDirection();
                 return;
             }
