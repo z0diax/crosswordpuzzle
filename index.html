@@ -173,6 +173,37 @@
             filter: saturate(0.8);
         }
 
+        .submit-answer-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 3.25rem;
+            padding: 0.95rem 1.45rem;
+            border-radius: 9999px;
+            border: 1px solid transparent;
+            background: linear-gradient(135deg, #5b1b5f, #8b3274 58%, #b84e92);
+            color: #fff;
+            font-size: 0.82rem;
+            font-weight: 900;
+            letter-spacing: 0.24em;
+            text-transform: uppercase;
+            box-shadow: 0 18px 30px rgba(107, 33, 95, 0.24);
+            transition: transform 0.18s ease, box-shadow 0.18s ease, filter 0.18s ease, opacity 0.18s ease;
+        }
+
+        .submit-answer-btn:hover:not(:disabled) {
+            transform: translateY(-1px);
+            filter: brightness(1.04);
+            box-shadow: 0 22px 36px rgba(107, 33, 95, 0.28);
+        }
+
+        .submit-answer-btn:disabled {
+            opacity: 0.62;
+            cursor: not-allowed;
+            box-shadow: none;
+            filter: saturate(0.82);
+        }
+
         .theme-input {
             border: 1px solid rgba(148, 64, 112, 0.18);
             background: rgba(255, 255, 255, 0.82);
@@ -360,6 +391,45 @@
             color: var(--wm-ink);
         }
 
+        .active-clue-panel {
+            border: 1px solid rgba(148, 64, 112, 0.16);
+            background:
+                linear-gradient(135deg, rgba(246, 200, 95, 0.2), rgba(216, 108, 156, 0.1)),
+                rgba(255, 255, 255, 0.92);
+            box-shadow:
+                inset 0 1px 0 rgba(255, 255, 255, 0.6),
+                0 12px 28px rgba(148, 64, 112, 0.08);
+        }
+
+        .active-clue-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 5.6rem;
+            padding: 0.45rem 0.85rem;
+            border-radius: 9999px;
+            background: linear-gradient(135deg, var(--wm-plum), var(--wm-rose));
+            color: #fff;
+            font-size: 0.72rem;
+            font-weight: 900;
+            letter-spacing: 0.22em;
+            text-transform: uppercase;
+            box-shadow: 0 12px 22px rgba(107, 33, 95, 0.2);
+        }
+
+        .active-clue-copy {
+            font-size: 1.05rem;
+            line-height: 1.5;
+            font-weight: 800;
+            color: var(--wm-ink);
+            max-width: 100%;
+        }
+
+        .active-clue-copy.is-placeholder {
+            color: var(--wm-muted);
+            font-weight: 700;
+        }
+
         .status-muted {
             color: var(--wm-muted);
         }
@@ -433,6 +503,24 @@
         @media (max-width: 640px) {
             .theme-badge {
                 letter-spacing: 0.14em;
+            }
+
+            .submit-answer-btn {
+                width: 100%;
+                min-height: 3.4rem;
+                padding-inline: 1.2rem;
+                font-size: 0.78rem;
+            }
+
+            .active-clue-badge {
+                min-width: 0;
+                font-size: 0.68rem;
+                letter-spacing: 0.18em;
+            }
+
+            .active-clue-copy {
+                font-size: 1rem;
+                line-height: 1.5;
             }
 
             .crossword-grid {
@@ -545,7 +633,7 @@
                         </div>
                         <div class="accent-chip rounded-2xl px-4 py-3 text-center min-w-[96px]">
                             <p class="text-[10px] uppercase font-extrabold tracking-[0.24em] text-[var(--wm-muted)]">Progress</p>
-                            <p class="text-xl font-black text-[var(--wm-ink)]"><span id="found-count">0</span>/<span id="total-count">9</span></p>
+                            <p class="text-xl font-black text-[var(--wm-ink)]"><span id="found-count">0</span>/<span id="total-count">6</span></p>
                         </div>
                         <button onclick="exitGame()" class="group rounded-full border border-[rgba(148,64,112,0.16)] bg-white/80 p-3 text-[var(--wm-muted)] transition-colors duration-300 hover:text-rose-600" type="button" aria-label="Exit game">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 transform group-hover:-translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -566,24 +654,32 @@
                         </div>
 
                         <div class="rounded-[1.5rem] bg-[rgba(255,255,255,0.68)] p-4 md:p-5 shadow-inner border border-[rgba(148,64,112,0.12)]">
-                            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
-                                <div>
-                                    <p class="text-[10px] uppercase font-extrabold tracking-[0.3em] text-[var(--wm-muted)]">Active Clue</p>
-                                    <p id="active-clue-text" class="text-sm font-semibold text-[var(--wm-ink)]">Select a clue to begin solving.</p>
-                                </div>
-                                <div class="flex flex-wrap items-center gap-2">
-                                    <button id="check-puzzle-btn" type="button" class="rounded-full border border-[rgba(148,64,112,0.14)] bg-white/80 px-4 py-2 text-xs font-extrabold uppercase tracking-[0.22em] text-[var(--wm-orchid)] transition hover:border-[rgba(148,64,112,0.28)] disabled:opacity-50 disabled:cursor-not-allowed">
-                                        Submit Answer
-                                    </button>
-                                    <button id="toggle-direction-btn" type="button" class="rounded-full border border-[rgba(148,64,112,0.14)] bg-white/80 px-4 py-2 text-xs font-extrabold uppercase tracking-[0.22em] text-[var(--wm-orchid)] transition hover:border-[rgba(148,64,112,0.28)] disabled:opacity-50 disabled:cursor-not-allowed">
-                                        Direction: Across
-                                    </button>
+                            <div class="mb-4">
+                                <div class="active-clue-panel rounded-[1.35rem] px-4 py-4 sm:px-5 sm:py-5">
+                                    <div class="flex flex-wrap items-center gap-3">
+                                        <p class="text-[10px] uppercase font-extrabold tracking-[0.3em] text-[var(--wm-muted)]">Active Clue</p>
+                                        <span id="active-clue-badge" class="active-clue-badge">Ready</span>
+                                    </div>
+                                    <p id="active-clue-text" class="active-clue-copy is-placeholder mt-4">Select a clue to begin solving.</p>
                                 </div>
                             </div>
 
                             <div id="grid-container" class="crossword-grid"></div>
 
-                            <p class="text-xs text-[var(--wm-muted)] mt-4">Keyboard support: arrow keys move through the board, backspace clears, and Enter toggles direction on crossing cells.</p>
+                            <div class="mt-4 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+                                <p class="text-xs text-[var(--wm-muted)] max-w-2xl">Keyboard support: arrow keys move through the board, backspace clears, and Enter toggles direction on crossing cells.</p>
+                                <div class="flex w-full lg:w-auto flex-col sm:flex-row items-stretch sm:items-center gap-2 lg:shrink-0">
+                                    <button id="test-layout-btn" type="button" class="hidden w-full sm:w-auto rounded-full border border-[rgba(148,64,112,0.14)] bg-white/80 px-4 py-2 text-xs font-extrabold uppercase tracking-[0.22em] text-[var(--wm-orchid)] transition hover:border-[rgba(148,64,112,0.28)]">
+                                        Next Layout
+                                    </button>
+                                    <button id="check-puzzle-btn" type="button" class="submit-answer-btn w-full sm:w-auto">
+                                        Submit Answer
+                                    </button>
+                                    <button id="toggle-direction-btn" type="button" class="w-full sm:w-auto rounded-full border border-[rgba(148,64,112,0.14)] bg-white/80 px-4 py-2 text-xs font-extrabold uppercase tracking-[0.22em] text-[var(--wm-orchid)] transition hover:border-[rgba(148,64,112,0.28)] disabled:opacity-50 disabled:cursor-not-allowed">
+                                        Direction: Across
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
@@ -636,6 +732,12 @@
 
     <script>
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz28j5SscNtyeanDDhVuX7qgdxpoXnI4r5Zg9AaK-0bfOwJKuCp26k2yFUFVv0_Z8aX-g/exec";
+        const PLACEHOLDER_SCRIPT_URL = "REPLACE_WITH_YOUR_APPS_SCRIPT_URL";
+        // Set to true or open the page with ?test=1 to bypass Apps Script checks locally.
+        const TEST_MODE = false;
+        const TEST_MODE_QUERY = new URLSearchParams(window.location.search).get('test');
+        const IS_TEST_MODE = TEST_MODE || TEST_MODE_QUERY === '1' || TEST_MODE_QUERY === 'true';
+        const IS_LOCAL_MODE = IS_TEST_MODE || SCRIPT_URL === PLACEHOLDER_SCRIPT_URL;
         const GAME_STATE_KEY = 'women-month-crossword-session';
         const MIN_BOARD_SIZE = 12;
         const LEADERBOARD_LIMIT = 10;
@@ -644,80 +746,76 @@
             wm01: { clue: 'Pre-colonial Filipina spiritual leader', length: 8 },
             wm02: { clue: 'A trait of a strong Filipina leader', length: 9 },
             wm03: { clue: 'Equality between men and women', length: 8 },
-            wm04: { clue: 'Deep respect for women in Filipino culture', length: 8 }
+            wm04: { clue: 'Deep respect for women in Filipino culture', length: 8 },
+            wm05: { clue: 'She was cleansed with "7 demons", suggesting she overcame significant spiritual or physical trauma', length: 9 },
+            wm06: { clue: 'RA 9262 public crime defined as any act or series of acts against women', length: 4 }
         });
 
         const PUZZLE_LAYOUTS = [
             {
                 id: 'layout-a',
                 words: [
-                    { key: 'wm01', direction: 'across', row: 4, col: 1 },
-                    { key: 'wm02', direction: 'down', row: 0, col: 6 },
-                    { key: 'wm03', direction: 'across', row: 8, col: 0 },
-                    { key: 'wm04', direction: 'down', row: 0, col: 8 }
+                    { key: 'wm01', direction: 'down', row: 0, col: 1 },
+                    { key: 'wm02', direction: 'down', row: 0, col: 8 },
+                    { key: 'wm03', direction: 'across', row: 8, col: 2 },
+                    { key: 'wm04', direction: 'across', row: 5, col: 3 },
+                    { key: 'wm05', direction: 'across', row: 1, col: 0 },
+                    { key: 'wm06', direction: 'down', row: 0, col: 4 }
                 ]
             },
             {
                 id: 'layout-b',
                 words: [
-                    { key: 'wm01', direction: 'across', row: 7, col: 0 },
-                    { key: 'wm02', direction: 'down', row: 0, col: 7 },
-                    { key: 'wm03', direction: 'down', row: 4, col: 1 },
-                    { key: 'wm04', direction: 'across', row: 3, col: 4 }
+                    { key: 'wm01', direction: 'down', row: 0, col: 4 },
+                    { key: 'wm02', direction: 'down', row: 0, col: 9 },
+                    { key: 'wm03', direction: 'across', row: 5, col: 0 },
+                    { key: 'wm04', direction: 'across', row: 7, col: 0 },
+                    { key: 'wm05', direction: 'across', row: 1, col: 3 },
+                    { key: 'wm06', direction: 'down', row: 0, col: 7 }
                 ]
             },
             {
                 id: 'layout-c',
                 words: [
-                    { key: 'wm01', direction: 'down', row: 1, col: 4 },
-                    { key: 'wm02', direction: 'across', row: 6, col: 0 },
-                    { key: 'wm03', direction: 'down', row: 0, col: 8 },
-                    { key: 'wm04', direction: 'across', row: 8, col: 0 }
+                    { key: 'wm01', direction: 'down', row: 0, col: 1 },
+                    { key: 'wm02', direction: 'down', row: 0, col: 8 },
+                    { key: 'wm03', direction: 'across', row: 5, col: 3 },
+                    { key: 'wm04', direction: 'across', row: 7, col: 4 },
+                    { key: 'wm05', direction: 'across', row: 1, col: 0 },
+                    { key: 'wm06', direction: 'down', row: 0, col: 4 }
                 ]
             },
             {
                 id: 'layout-d',
                 words: [
-                    { key: 'wm01', direction: 'down', row: 0, col: 4 },
-                    { key: 'wm02', direction: 'across', row: 5, col: 0 },
-                    { key: 'wm03', direction: 'across', row: 1, col: 1 },
-                    { key: 'wm04', direction: 'down', row: 4, col: 1 }
+                    { key: 'wm01', direction: 'down', row: 0, col: 1 },
+                    { key: 'wm02', direction: 'down', row: 2, col: 6 },
+                    { key: 'wm03', direction: 'across', row: 10, col: 0 },
+                    { key: 'wm04', direction: 'across', row: 7, col: 3 },
+                    { key: 'wm05', direction: 'across', row: 3, col: 0 },
+                    { key: 'wm06', direction: 'down', row: 2, col: 4 }
                 ]
             },
             {
                 id: 'layout-e',
                 words: [
-                    { key: 'wm01', direction: 'across', row: 7, col: 4 },
-                    { key: 'wm02', direction: 'down', row: 0, col: 11 },
-                    { key: 'wm03', direction: 'down', row: 4, col: 5 },
-                    { key: 'wm04', direction: 'across', row: 9, col: 0 }
+                    { key: 'wm01', direction: 'down', row: 0, col: 3 },
+                    { key: 'wm02', direction: 'down', row: 0, col: 10 },
+                    { key: 'wm03', direction: 'across', row: 8, col: 4 },
+                    { key: 'wm04', direction: 'across', row: 5, col: 5 },
+                    { key: 'wm05', direction: 'across', row: 1, col: 2 },
+                    { key: 'wm06', direction: 'down', row: 0, col: 6 }
                 ]
             },
             {
                 id: 'layout-f',
                 words: [
-                    { key: 'wm01', direction: 'down', row: 0, col: 7 },
-                    { key: 'wm02', direction: 'across', row: 7, col: 0 },
-                    { key: 'wm03', direction: 'across', row: 1, col: 4 },
-                    { key: 'wm04', direction: 'down', row: 4, col: 3 }
-                ]
-            },
-            {
-                id: 'layout-g',
-                words: [
-                    { key: 'wm01', direction: 'down', row: 0, col: 7 },
-                    { key: 'wm02', direction: 'across', row: 7, col: 0 },
-                    { key: 'wm03', direction: 'across', row: 1, col: 4 },
-                    { key: 'wm04', direction: 'down', row: 4, col: 5 }
-                ]
-            },
-            {
-                id: 'layout-h',
-                words: [
-                    { key: 'wm01', direction: 'down', row: 4, col: 7 },
-                    { key: 'wm02', direction: 'across', row: 11, col: 0 },
-                    { key: 'wm03', direction: 'across', row: 5, col: 4 },
-                    { key: 'wm04', direction: 'down', row: 0, col: 9 }
+                    { key: 'wm01', direction: 'down', row: 2, col: 1 },
+                    { key: 'wm02', direction: 'down', row: 2, col: 8 },
+                    { key: 'wm03', direction: 'across', row: 7, col: 3 },
+                    { key: 'wm04', direction: 'across', row: 9, col: 4 },
+                    { key: 'wm05', direction: 'across', row: 3, col: 0 },
+                    { key: 'wm06', direction: 'down', row: 2, col: 4 }
                 ]
             }
         ];
@@ -750,6 +848,8 @@
         const cluesAcross = document.getElementById('clues-across');
         const cluesDown = document.getElementById('clues-down');
         const activeClueText = document.getElementById('active-clue-text');
+        const activeClueBadge = document.getElementById('active-clue-badge');
+        const testLayoutBtn = document.getElementById('test-layout-btn');
         const toggleDirectionBtn = document.getElementById('toggle-direction-btn');
         const leaderboardList = document.getElementById('leaderboard-list');
         const leaderboardHead = document.getElementById('leaderboard-head');
@@ -799,9 +899,11 @@
         updateStartButtonState();
         renderLeaderboard();
         startLeaderboardPolling();
+        updateTestLayoutButton();
 
         toggleDirectionBtn.addEventListener('click', toggleActiveDirection);
         checkPuzzleBtn.addEventListener('click', handleCheckPuzzleClick);
+        testLayoutBtn.addEventListener('click', cycleTestPuzzleLayout);
         returnHomeBtn.addEventListener('click', handleModalAction);
         emailInput.addEventListener('input', handleParticipantEmailInput);
         officeInput.addEventListener('input', updateStartButtonState);
@@ -1096,18 +1198,25 @@
         }
 
         async function loadLeaderboard({ showLoading = false } = {}) {
-            if (SCRIPT_URL === "REPLACE_WITH_YOUR_APPS_SCRIPT_URL") {
+            if (IS_LOCAL_MODE) {
                 leaderboardEntries = [];
                 renderLeaderboard();
-                setLeaderboardStatus('empty', 'Leaderboard is disabled in local mode until the Apps Script URL is set.');
-                leaderboardUpdated.textContent = 'Set the Apps Script URL to enable live rankings';
+                setLeaderboardStatus(
+                    'empty',
+                    IS_TEST_MODE
+                        ? 'Leaderboard is disabled while test mode is active.'
+                        : 'Leaderboard is disabled in local mode until the Apps Script URL is set.'
+                );
+                leaderboardUpdated.textContent = IS_TEST_MODE
+                    ? 'Test mode is active'
+                    : 'Set the Apps Script URL to enable live rankings';
                 return;
             }
 
             const requestToken = ++leaderboardRequestToken;
 
             if (showLoading && !leaderboardEntries.length) {
-                setLeaderboardStatus('loading', 'Loading leaderboard...');
+                setLeaderboardStatus('loading', 'Loading fastest finishers...');
             }
 
             try {
@@ -1151,7 +1260,7 @@
             stopLeaderboardPolling();
             loadLeaderboard({ showLoading: true });
 
-            if (SCRIPT_URL === "REPLACE_WITH_YOUR_APPS_SCRIPT_URL") {
+            if (IS_LOCAL_MODE) {
                 return;
             }
 
@@ -1251,11 +1360,16 @@
                 return { status: 'stale' };
             }
 
-            if (SCRIPT_URL === "REPLACE_WITH_YOUR_APPS_SCRIPT_URL") {
+            if (IS_LOCAL_MODE) {
                 isCheckingParticipantEmail = false;
                 isDuplicateParticipantEmail = false;
                 isParticipantEmailVerified = true;
-                setEmailCheckStatus('available', 'Participant verification is disabled in local mode.');
+                setEmailCheckStatus(
+                    'available',
+                    IS_TEST_MODE
+                        ? 'Participant verification is disabled while test mode is active.'
+                        : 'Participant verification is disabled in local mode.'
+                );
                 updateStartButtonState();
                 return { status: 'available' };
             }
@@ -1325,10 +1439,73 @@
             return layoutPool[Math.floor(Math.random() * layoutPool.length)].id;
         }
 
+        function getNextPuzzleLayoutId(layoutId = currentLayoutId) {
+            const currentIndex = PUZZLE_LAYOUTS.findIndex(layout => layout.id === layoutId);
+            if (currentIndex === -1) {
+                return DEFAULT_PUZZLE_LAYOUT_ID;
+            }
+
+            return PUZZLE_LAYOUTS[(currentIndex + 1) % PUZZLE_LAYOUTS.length].id;
+        }
+
+        function formatLayoutLabel(layoutId = currentLayoutId) {
+            const suffix = String(layoutId || '')
+                .replace(/^layout-/i, '')
+                .toUpperCase();
+
+            return suffix ? `Layout ${suffix}` : 'Layout';
+        }
+
         function selectPuzzleLayout(layoutId) {
             currentLayoutId = getPuzzleLayoutById(layoutId).id;
             preparePuzzle(currentLayoutId);
             totalCount.textContent = puzzleWords.length;
+            updateTestLayoutButton();
+        }
+
+        function updateTestLayoutButton() {
+            if (!IS_TEST_MODE) {
+                testLayoutBtn.classList.add('hidden');
+                return;
+            }
+
+            testLayoutBtn.classList.remove('hidden');
+            testLayoutBtn.textContent = `Next ${formatLayoutLabel(currentLayoutId)}`;
+        }
+
+        function cycleTestPuzzleLayout() {
+            if (!IS_TEST_MODE || !gameScreen.classList.contains('active') || isSubmittingPuzzle) {
+                return;
+            }
+
+            clearInterval(timerInterval);
+            elapsedSeconds = 0;
+            startTime = null;
+            timerDisplay.textContent = '00:00';
+            userEntries = {};
+            completedWords = new Set();
+            lockedWordKeys = new Set();
+            invalidWordKeys = new Set();
+            validatingWordKeys = new Set();
+            lastValidatedWordEntries = {};
+            wordValidationRequestCounter = 0;
+            wordValidationRequestIds = {};
+            hasCompletedPuzzle = false;
+            isSubmittingPuzzle = false;
+            lastSubmissionFingerprint = '';
+            requiresManualCheck = false;
+
+            const nextLayoutId = getNextPuzzleLayoutId(currentLayoutId);
+            lastStartedLayoutId = nextLayoutId;
+            selectPuzzleLayout(nextLayoutId);
+            activeDirection = 'across';
+            activeCellKey = getDefaultActiveKey();
+            resetStatusBox();
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+            renderGame({ focus: false });
+            startTimer();
+            focusActiveCell(true);
         }
 
         function launchGame() {
@@ -1575,7 +1752,7 @@
                 return;
             }
 
-            if (SCRIPT_URL === "REPLACE_WITH_YOUR_APPS_SCRIPT_URL") {
+            if (IS_LOCAL_MODE) {
                 const previousActiveKey = activeCellKey;
                 lockedWordKeys = new Set([...lockedWordKeys, word.wordKey]);
                 lastValidatedWordEntries[word.wordKey] = entry;
@@ -1896,13 +2073,15 @@
         }
 
         async function sendToGoogleSheet() {
-            if (SCRIPT_URL === "REPLACE_WITH_YOUR_APPS_SCRIPT_URL") {
+            if (IS_LOCAL_MODE) {
                 hasCompletedPuzzle = true;
                 isSubmittingPuzzle = false;
                 lockedWordKeys = new Set(puzzleWords.map(word => word.wordKey));
                 clearSavedGameState();
                 setModalState('success');
-                submitStatusText.textContent = 'Validation skipped in local mode. Thank you for participating.';
+                submitStatusText.textContent = IS_TEST_MODE
+                    ? 'Test mode is active. Submission was kept locally and not sent to Google Sheets.'
+                    : 'Validation skipped in local mode. Thank you for participating.';
                 submitStatusLoader.classList.add('hidden');
                 submitStatus.classList.remove('status-muted', 'status-error');
                 submitStatus.classList.add('status-success');
@@ -2142,13 +2321,17 @@
             const canToggle = activeCell ? activeCell.words.length > 1 : false;
 
             if (!activeWord) {
+                activeClueBadge.textContent = 'Ready';
+                activeClueText.classList.add('is-placeholder');
                 activeClueText.textContent = 'Select a clue to begin solving.';
                 toggleDirectionBtn.disabled = true;
                 toggleDirectionBtn.textContent = 'Direction: Across';
                 return;
             }
 
-            activeClueText.textContent = `${activeWord.number} ${formatDirection(activeWord.direction)}. ${activeWord.clue}`;
+            activeClueBadge.textContent = `${activeWord.number} ${formatDirection(activeWord.direction)}`;
+            activeClueText.classList.remove('is-placeholder');
+            activeClueText.textContent = activeWord.clue;
             toggleDirectionBtn.disabled = !canToggle;
             toggleDirectionBtn.textContent = `Direction: ${formatDirection(activeDirection)}`;
         }
