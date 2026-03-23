@@ -1018,7 +1018,9 @@
                 clues: [
                     'Pre-colonial Filipina spiritual leader',
                     'Female ritual healer in early Philippine communities',
-                    'Indigenous priestess or shaman in pre-colonial society'
+                    'Indigenous priestess or shaman in pre-colonial society',
+                    'Traditional woman spiritual guide in early Philippine culture',
+                    'Pre-Hispanic Filipina known for healing and ritual leadership'
                 ],
                 length: 8
             },
@@ -1026,7 +1028,9 @@
                 clues: [
                     'A trait of a strong Filipina leader',
                     'Able to recover quickly from hardship',
-                    'Strong and adaptable despite challenges'
+                    'Strong and adaptable despite challenges',
+                    'Capable of bouncing back after difficulties',
+                    'Describes someone who stays strong under pressure'
                 ],
                 length: 9
             },
@@ -1034,7 +1038,9 @@
                 clues: [
                     'Equality between men and women',
                     'Equal rights, status, and opportunities for all',
-                    'Fair treatment regardless of gender'
+                    'Fair treatment regardless of gender',
+                    'A principle of equal opportunities for every sex',
+                    'State of being equal in rights and dignity'
                 ],
                 length: 8
             },
@@ -1042,7 +1048,9 @@
                 clues: [
                     'Movement advocating women\'s rights and equality',
                     'Belief in the social, political, and economic equality of women',
-                    'Advocacy for equal rights and opportunities for women'
+                    'Advocacy for equal rights and opportunities for women',
+                    'Ideology that supports women\'s empowerment and equal treatment',
+                    'Cause centered on women\'s rights and justice'
                 ],
                 length: 8
             },
@@ -1050,7 +1058,9 @@
                 clues: [
                     'Mary ______, follower of Jesus linked with being freed from seven demons',
                     'Biblical title for Mary of Magdala',
-                    'Surname-like identifier of Mary from Magdala'
+                    'Surname-like identifier of Mary from Magdala',
+                    'Name used to distinguish Mary of Magdala in the Bible',
+                    'Second name attached to Mary associated with Magdala'
                 ],
                 length: 9
             },
@@ -1058,7 +1068,9 @@
                 clues: [
                     'Acronym for Violence Against Women and Children',
                     'Four-letter abuse category covered by RA 9262',
-                    'Philippine legal shorthand for violence against women and children'
+                    'Philippine legal shorthand for violence against women and children',
+                    'Initialism commonly used in women and child protection cases',
+                    'Short form used in laws and reports on abuse against women and children'
                 ],
                 length: 4
             }
@@ -1202,6 +1214,8 @@
         let participantEmailCheckToken = 0;
         let currentLayoutId = DEFAULT_PUZZLE_LAYOUT_ID;
         let lastStartedLayoutId = '';
+        let starterCellOrder = [];
+        let clueOrderByWordKey = {};
         let lastSubmissionFingerprint = '';
         let modalActionType = 'exit';
         let requiresManualCheck = false;
@@ -1751,17 +1765,43 @@
             return PUZZLE_LAYOUTS.find(layout => layout.id === layoutId) || PUZZLE_LAYOUTS[0];
         }
 
-        function getRandomPuzzleLayoutId(excludeLayoutId = '') {
-            const eligibleLayouts = PUZZLE_LAYOUTS.filter(layout => layout.id !== excludeLayoutId);
-            const layoutPool = eligibleLayouts.length ? eligibleLayouts : PUZZLE_LAYOUTS;
+        function getRandomIndex(max) {
+            if (!Number.isInteger(max) || max <= 1) {
+                return 0;
+            }
 
             if (window.crypto?.getRandomValues) {
                 const values = new Uint32Array(1);
-                window.crypto.getRandomValues(values);
-                return layoutPool[values[0] % layoutPool.length].id;
+                const maxUint32 = 0x100000000;
+                const unbiasedLimit = Math.floor(maxUint32 / max) * max;
+                let randomValue = 0;
+
+                do {
+                    window.crypto.getRandomValues(values);
+                    randomValue = values[0];
+                } while (randomValue >= unbiasedLimit);
+
+                return randomValue % max;
             }
 
-            return layoutPool[Math.floor(Math.random() * layoutPool.length)].id;
+            return Math.floor(Math.random() * max);
+        }
+
+        function shuffleList(items) {
+            const shuffled = [...items];
+
+            for (let index = shuffled.length - 1; index > 0; index--) {
+                const swapIndex = getRandomIndex(index + 1);
+                [shuffled[index], shuffled[swapIndex]] = [shuffled[swapIndex], shuffled[index]];
+            }
+
+            return shuffled;
+        }
+
+        function getRandomPuzzleLayoutId(excludeLayoutId = '') {
+            const eligibleLayouts = PUZZLE_LAYOUTS.filter(layout => layout.id !== excludeLayoutId);
+            const layoutPool = eligibleLayouts.length ? eligibleLayouts : PUZZLE_LAYOUTS;
+            return layoutPool[getRandomIndex(layoutPool.length)].id;
         }
 
         function getNextPuzzleLayoutId(layoutId = currentLayoutId) {
@@ -1781,9 +1821,19 @@
             return suffix ? `Layout ${suffix}` : 'Layout';
         }
 
-        function selectPuzzleLayout(layoutId) {
+        function selectPuzzleLayout(layoutId, options = {}) {
+            const {
+                preserveStarterOrder = false,
+                preserveClueOrder = false
+            } = options;
             stopActiveClueRotation();
             currentLayoutId = getPuzzleLayoutById(layoutId).id;
+            if (!preserveStarterOrder) {
+                starterCellOrder = [];
+            }
+            if (!preserveClueOrder) {
+                clueOrderByWordKey = {};
+            }
             preparePuzzle(currentLayoutId);
             totalCount.textContent = puzzleWords.length;
             updateTestLayoutButton();
@@ -1878,6 +1928,14 @@
                 if (!clues.length) {
                     throw new Error(`Missing clue definition for ${item.key}`);
                 }
+                const savedClues = Array.isArray(clueOrderByWordKey[item.key])
+                    ? clueOrderByWordKey[item.key].filter(clue => clues.includes(clue))
+                    : [];
+                const remainingClues = clues.filter(clue => !savedClues.includes(clue));
+                const randomizedClues = savedClues.length === clues.length
+                    ? savedClues
+                    : [...savedClues, ...shuffleList(remainingClues)];
+                clueOrderByWordKey[item.key] = randomizedClues;
                 const length = Number(wordDefinition.length || 0);
                 if (!Number.isInteger(length) || length < 1) {
                     throw new Error(`Missing length definition for ${item.key}`);
@@ -1889,8 +1947,8 @@
                     row: item.row - rowOffset,
                     col: item.col - colOffset,
                     length,
-                    clue: clues[0],
-                    clues,
+                    clue: randomizedClues[0],
+                    clues: randomizedClues,
                     wordKey: item.key,
                     id: index,
                     number: null,
@@ -1924,7 +1982,7 @@
             boardRows = Math.max(MIN_BOARD_SIZE, maxRow + 1);
             boardCols = Math.max(MIN_BOARD_SIZE, maxCol + 1);
 
-            let clueNumber = 1;
+            const starterCells = [];
             for (let row = 0; row < boardRows; row++) {
                 for (let col = 0; col < boardCols; col++) {
                     const key = getCellKey(row, col);
@@ -1937,13 +1995,26 @@
 
                     if (!starters.length) continue;
 
-                    cell.number = clueNumber;
-                    starters.forEach(word => {
-                        word.number = clueNumber;
-                    });
-                    clueNumber++;
+                    starterCells.push({ key, cell, starters });
                 }
             }
+
+            const starterCellMap = new Map(starterCells.map(item => [item.key, item]));
+            const canReuseStarterOrder = starterCellOrder.length === starterCells.length
+                && starterCellOrder.every(key => starterCellMap.has(key));
+            const orderedStarterCells = canReuseStarterOrder
+                ? starterCellOrder.map(key => starterCellMap.get(key)).filter(Boolean)
+                : shuffleList(starterCells);
+
+            starterCellOrder = orderedStarterCells.map(item => item.key);
+
+            orderedStarterCells.forEach((item, index) => {
+                const clueNumber = index + 1;
+                item.cell.number = clueNumber;
+                item.starters.forEach(word => {
+                    word.number = clueNumber;
+                });
+            });
         }
 
         function getCellKey(row, col) {
@@ -2268,7 +2339,7 @@
         function getDefaultActiveKey() {
             const firstAcross = puzzleWords
                 .filter(word => word.direction === 'across')
-                .sort((left, right) => left.number - right.number)[0];
+                .sort((left, right) => left.row - right.row || left.col - right.col)[0];
 
             return firstAcross ? firstAcross.cells[0].key : (puzzleWords[0]?.cells[0]?.key || null);
         }
@@ -2508,7 +2579,12 @@
 
         function getGridSignature() {
             const activeCells = Array.from(puzzleCells.keys()).sort().join('|');
-            return `${currentLayoutId}:${boardRows}x${boardCols}:${activeCells}`;
+            const numberedCells = Array.from(puzzleCells.values())
+                .filter(cell => Number.isInteger(cell.number))
+                .sort((left, right) => left.row - right.row || left.col - right.col)
+                .map(cell => `${cell.key}:${cell.number}`)
+                .join('|');
+            return `${currentLayoutId}:${boardRows}x${boardCols}:${activeCells}:${numberedCells}`;
         }
 
         function saveGameState() {
@@ -2520,6 +2596,8 @@
             const state = {
                 user: currentUser,
                 layoutId: currentLayoutId,
+                starterCellOrder,
+                clueOrderByWordKey,
                 userEntries,
                 lockedWordKeys: Array.from(lockedWordKeys),
                 activeCellKey,
@@ -2553,8 +2631,22 @@
                     office: String(state.user.office)
                 };
                 const restoredLayoutId = typeof state.layoutId === 'string' ? state.layoutId : DEFAULT_PUZZLE_LAYOUT_ID;
+                starterCellOrder = Array.isArray(state.starterCellOrder)
+                    ? state.starterCellOrder.filter(key => typeof key === 'string')
+                    : [];
+                clueOrderByWordKey = state.clueOrderByWordKey && typeof state.clueOrderByWordKey === 'object'
+                    ? Object.fromEntries(
+                        Object.entries(state.clueOrderByWordKey).map(([wordKey, clues]) => [
+                            wordKey,
+                            Array.isArray(clues) ? clues.filter(clue => typeof clue === 'string') : []
+                        ])
+                    )
+                    : {};
                 lastStartedLayoutId = restoredLayoutId;
-                selectPuzzleLayout(restoredLayoutId);
+                selectPuzzleLayout(restoredLayoutId, {
+                    preserveStarterOrder: true,
+                    preserveClueOrder: true
+                });
 
                 document.getElementById('user-name').value = currentUser.name;
                 emailInput.value = currentUser.email;
