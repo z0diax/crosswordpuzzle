@@ -997,7 +997,7 @@
 
     <script>
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxlx85-4skPjoAqmFzW-_e79Nf6P6I5B359fuslnta-WydIuhTSgOZq8wwazzBQKyfu3w/exec";
-        const TEST_MODE = true;
+        const TEST_MODE = false;
         const TEST_MODE_QUERY = new URLSearchParams(window.location.search).get('test');
         const IS_TEST_MODE = TEST_MODE || TEST_MODE_QUERY === '1' || TEST_MODE_QUERY === 'true';
         const IS_LOCAL_MODE = IS_TEST_MODE || !SCRIPT_URL || SCRIPT_URL === "REPLACE_WITH_YOUR_APPS_SCRIPT_URL";
