@@ -817,7 +817,7 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 5a4 4 0 110 8 4 4 0 010-8zm0 8v6m-3 0h6" />
                             </svg>
                         </div>
-                        <p class="text-xs font-extrabold uppercase tracking-[0.35em] text-[#944070]/70 mb-3">HRMDO - LGU TACLOBAN</p>
+                        <p class="text-xs font-extrabold uppercase tracking-[0.35em] text-[#944070]/70 mb-3">LGU - TACLOBAN CITY</p>
                         <h1 class="display-font text-5xl text-[var(--wm-plum)] leading-none">Crossword Challenge</h1>
                     </div>
 
@@ -997,7 +997,7 @@
 
     <script>
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxlx85-4skPjoAqmFzW-_e79Nf6P6I5B359fuslnta-WydIuhTSgOZq8wwazzBQKyfu3w/exec";
-        const TEST_MODE = false;
+        const TEST_MODE = true;
         const TEST_MODE_QUERY = new URLSearchParams(window.location.search).get('test');
         const IS_TEST_MODE = TEST_MODE || TEST_MODE_QUERY === '1' || TEST_MODE_QUERY === 'true';
         const IS_LOCAL_MODE = IS_TEST_MODE || !SCRIPT_URL || SCRIPT_URL === "REPLACE_WITH_YOUR_APPS_SCRIPT_URL";
@@ -1005,6 +1005,7 @@
         const MIN_BOARD_SIZE = 1;
         const ACTIVE_CLUE_ROTATE_MS = 6000;
         const ACTIVE_CLUE_FADE_MS = 180;
+        const ACTIVE_CLUE_VARIANTS_PER_WORD = 5;
         const GUIDED_BOARD_SCROLL_Y_MS = 700;
         const GUIDED_BOARD_NUDGE_X_MS = 520;
         const GUIDED_BOARD_PAUSE_MS = 220;
@@ -1018,7 +1019,22 @@
                     'Female ritual healer in early Philippine communities',
                     'Indigenous priestess or shaman in pre-colonial society',
                     'Traditional woman spiritual guide in early Philippine culture',
-                    'Pre-Hispanic Filipina known for healing and ritual leadership'
+                    'Pre-Hispanic Filipina known for healing and ritual leadership',
+                    'Precolonial Visayan woman with sacred community duties',
+                    'Woman healer and ceremonial leader before Spanish rule',
+                    'Spiritual authority often consulted in early barangays',
+                    'Indigenous female shamanic role in the Philippines',
+                    'Cultural title for a woman who led rites and healing',
+                    'Historic Filipina linked with rituals, chants, and remedies',
+                    'Female ritual specialist in native Philippine communities',
+                    'Early Philippine woman respected for spiritual power',
+                    'Woman intermediary in indigenous belief traditions',
+                    'Title connected with healing and sacred ceremonies',
+                    'Precolonial Filipina spiritual elder',
+                    'Traditional healer-priestess of old Philippine society',
+                    'Female native faith leader before colonization',
+                    'Local priestess figure in early Philippine villages',
+                    'Woman community guide in ritual and healing practices'
                 ],
                 length: 8
             },
@@ -1028,7 +1044,22 @@
                     'Able to recover quickly from hardship',
                     'Strong and adaptable despite challenges',
                     'Capable of bouncing back after difficulties',
-                    'Describes someone who stays strong under pressure'
+                    'Describes someone who stays strong under pressure',
+                    'Able to withstand stress and recover well',
+                    'Trait of someone who rises after setbacks',
+                    'Not easily broken by adversity',
+                    'Quick to adapt after serious problems',
+                    'Mentally tough and able to recover',
+                    'Strong again after challenges',
+                    'Able to endure and rebound',
+                    'Describes recovery after hardship',
+                    'Quality of staying firm despite pressure',
+                    'Able to bounce back from difficulty',
+                    'Marked by toughness and flexibility',
+                    'Refers to recovery strength after trials',
+                    'Able to cope well with change and stress',
+                    'Strong in spirit after problems',
+                    'Capable of recovering from shock or strain'
                 ],
                 length: 9
             },
@@ -1038,7 +1069,22 @@
                     'Equal rights, status, and opportunities for all',
                     'Fair treatment regardless of gender',
                     'A principle of equal opportunities for every sex',
-                    'State of being equal in rights and dignity'
+                    'State of being equal in rights and dignity',
+                    'Same rights and opportunities for everyone',
+                    'Condition of equal status under the law',
+                    'Equal standing regardless of sex',
+                    'Idea that no gender should be treated as lesser',
+                    'Balance of rights between all people',
+                    'Same access to opportunities and respect',
+                    'Principle of fairness in status and rights',
+                    'Equal treatment in society and work',
+                    'No one gets more rights because of gender',
+                    'State where everyone has the same standing',
+                    'Equal legal and social status',
+                    'Opposite of unequal treatment',
+                    'Uniform access to rights and chances',
+                    'Shared status without bias',
+                    'Social condition of equal worth'
                 ],
                 length: 8
             },
@@ -1048,7 +1094,22 @@
                     'Belief in the social, political, and economic equality of women',
                     'Advocacy for equal rights and opportunities for women',
                     'Ideology that supports women\'s empowerment and equal treatment',
-                    'Cause centered on women\'s rights and justice'
+                    'Cause centered on women\'s rights and justice',
+                    'Movement for equal rights of women',
+                    'Advocacy centered on ending sexism',
+                    'Philosophy supporting gender equality for women',
+                    'Campaign for women\'s political and social equality',
+                    'Belief that women deserve equal rights',
+                    'Women\'s rights movement',
+                    'Support for equal opportunities regardless of sex',
+                    'Idea opposing discrimination against women',
+                    'Social movement advancing women\'s equality',
+                    'Cause for dismantling gender-based injustice',
+                    'Framework promoting women\'s empowerment',
+                    'Advocacy for female equality in every sphere',
+                    'Movement challenging patriarchal inequality',
+                    'Equal-rights cause focused on women',
+                    'Philosophy that rejects women\'s subordination'
                 ],
                 length: 8
             },
@@ -1058,7 +1119,22 @@
                     'Biblical title for Mary of Magdala',
                     'Surname-like identifier of Mary from Magdala',
                     'Name used to distinguish Mary of Magdala in the Bible',
-                    'Second name attached to Mary associated with Magdala'
+                    'Second name attached to Mary associated with Magdala',
+                    'Last title linked to Mary from Magdala',
+                    'Descriptor attached to Mary of Magdala',
+                    'Word completing the familiar name Mary ______',
+                    'Biblical identifier following Mary in a well-known disciple\'s name',
+                    'Nine-letter title linked to Mary from Magdala',
+                    'Name by which Mary of Magdala is commonly known',
+                    'Blank after Mary in the name of the disciple from Magdala',
+                    'Epithet meaning she was from Magdala',
+                    'Surname-like label paired with Mary in the New Testament',
+                    'Traditional identifier for Mary associated with Jesus',
+                    'Biblical surname of Mary from Magdala',
+                    'Name used after Mary for the disciple from Magdala',
+                    'Word that completes the phrase Mary ______ in scripture',
+                    'Distinguishing name of Mary of Magdala',
+                    'Common title attached to Mary from Magdala'
                 ],
                 length: 9
             },
@@ -1068,7 +1144,22 @@
                     'Four-letter abuse category covered by RA 9262',
                     'Philippine legal shorthand for violence against women and children',
                     'Initialism commonly used in women and child protection cases',
-                    'Short form used in laws and reports on abuse against women and children'
+                    'Short form used in laws and reports on abuse against women and children',
+                    'Abbreviation in RA 9262 for abuse against women and children',
+                    'Four-letter short form in gender protection law',
+                    'Initials used for violence against women and children',
+                    'Common case label in protection reports',
+                    'Acronym used in Philippine reports on abuse of women and children',
+                    'Legal shorthand for abuse involving women and minors',
+                    'Initialism used by social workers and police for such cases',
+                    'Four-letter term often seen in protection ordinances',
+                    'Quick label for gender-based violence against women and children',
+                    'Short code for abuse cases covered by RA 9262',
+                    'Common abbreviation in women\'s protection programs',
+                    'Report-writing shorthand for violence against women and children',
+                    'Protective-services acronym involving women and children',
+                    'Initial letters of a phrase about abuse against women and children',
+                    'Four-letter label for violence cases involving women and children'
                 ],
                 length: 4
             }
@@ -1230,7 +1321,7 @@
 
         selectPuzzleLayout(DEFAULT_PUZZLE_LAYOUT_ID);
         totalCount.textContent = puzzleWords.length;
-        activeCellKey = getDefaultActiveKey();
+        applyDefaultActiveSelection();
         renderGame({ focus: false });
         restoreSavedGameState();
         updateStartButtonState();
@@ -1872,8 +1963,7 @@
             const nextLayoutId = getNextPuzzleLayoutId(currentLayoutId);
             lastStartedLayoutId = nextLayoutId;
             selectPuzzleLayout(nextLayoutId);
-            activeDirection = 'across';
-            activeCellKey = getDefaultActiveKey();
+            applyDefaultActiveSelection();
             resetStatusBox();
             modal.classList.add('hidden');
             modal.classList.remove('flex');
@@ -1926,13 +2016,14 @@
                 if (!clues.length) {
                     throw new Error(`Missing clue definition for ${item.key}`);
                 }
+                const clueLimit = Math.min(ACTIVE_CLUE_VARIANTS_PER_WORD, clues.length);
                 const savedClues = Array.isArray(clueOrderByWordKey[item.key])
                     ? clueOrderByWordKey[item.key].filter(clue => clues.includes(clue))
                     : [];
                 const remainingClues = clues.filter(clue => !savedClues.includes(clue));
-                const randomizedClues = savedClues.length === clues.length
+                const randomizedClues = savedClues.length === clueLimit
                     ? savedClues
-                    : [...savedClues, ...shuffleList(remainingClues)];
+                    : [...savedClues, ...shuffleList(remainingClues)].slice(0, clueLimit);
                 clueOrderByWordKey[item.key] = randomizedClues;
                 const length = Number(wordDefinition.length || 0);
                 if (!Number.isInteger(length) || length < 1) {
@@ -2334,12 +2425,34 @@
             gridContainer.style.gridTemplateColumns = `repeat(${boardCols}, minmax(0, 1fr))`;
         }
 
-        function getDefaultActiveKey() {
-            const firstAcross = puzzleWords
-                .filter(word => word.direction === 'across')
-                .sort((left, right) => left.row - right.row || left.col - right.col)[0];
+        function getDefaultActiveWord() {
+            return [...puzzleWords]
+                .sort((left, right) => {
+                    const numberDelta = (left.number ?? Number.MAX_SAFE_INTEGER) - (right.number ?? Number.MAX_SAFE_INTEGER);
+                    if (numberDelta !== 0) return numberDelta;
 
-            return firstAcross ? firstAcross.cells[0].key : (puzzleWords[0]?.cells[0]?.key || null);
+                    if (left.direction !== right.direction) {
+                        return left.direction === 'across' ? -1 : 1;
+                    }
+
+                    const rowDelta = left.row - right.row;
+                    if (rowDelta !== 0) return rowDelta;
+
+                    return left.col - right.col;
+                })[0] || null;
+        }
+
+        function getDefaultActiveKey() {
+            return getDefaultActiveWord()?.cells[0]?.key || null;
+        }
+
+        function getDefaultActiveDirection() {
+            return getDefaultActiveWord()?.direction || 'across';
+        }
+
+        function applyDefaultActiveSelection() {
+            activeDirection = getDefaultActiveDirection();
+            activeCellKey = getDefaultActiveKey();
         }
 
         function getWordById(wordId) {
@@ -2658,8 +2771,11 @@
                     }
                 });
 
-                activeDirection = state.activeDirection === 'down' ? 'down' : 'across';
-                activeCellKey = puzzleCells.has(state.activeCellKey) ? state.activeCellKey : getDefaultActiveKey();
+                const hasSavedActiveCell = puzzleCells.has(state.activeCellKey);
+                activeDirection = hasSavedActiveCell
+                    ? (state.activeDirection === 'down' ? 'down' : 'across')
+                    : getDefaultActiveDirection();
+                activeCellKey = hasSavedActiveCell ? state.activeCellKey : getDefaultActiveKey();
                 hasCompletedPuzzle = false;
                 isSubmittingPuzzle = false;
                 completedWords = new Set();
@@ -2934,8 +3050,7 @@
             isSubmittingPuzzle = false;
             lastSubmissionFingerprint = '';
             requiresManualCheck = false;
-            activeDirection = 'across';
-            activeCellKey = getDefaultActiveKey();
+            applyDefaultActiveSelection();
             foundCount.textContent = '0';
             resetStatusBox();
             modal.classList.add('hidden');
@@ -3359,8 +3474,7 @@
             elapsedSeconds = 0;
             startTime = null;
             selectPuzzleLayout(DEFAULT_PUZZLE_LAYOUT_ID);
-            activeDirection = 'across';
-            activeCellKey = getDefaultActiveKey();
+            applyDefaultActiveSelection();
             userEntries = {};
             completedWords = new Set();
             lockedWordKeys = new Set();
