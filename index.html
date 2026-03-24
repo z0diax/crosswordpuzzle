@@ -173,37 +173,6 @@
             filter: saturate(0.8);
         }
 
-        .submit-answer-btn {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            min-height: 3.25rem;
-            padding: 0.95rem 1.45rem;
-            border-radius: 9999px;
-            border: 1px solid transparent;
-            background: linear-gradient(135deg, #5b1b5f, #8b3274 58%, #b84e92);
-            color: #fff;
-            font-size: 0.82rem;
-            font-weight: 900;
-            letter-spacing: 0.24em;
-            text-transform: uppercase;
-            box-shadow: 0 18px 30px rgba(107, 33, 95, 0.24);
-            transition: transform 0.18s ease, box-shadow 0.18s ease, filter 0.18s ease, opacity 0.18s ease;
-        }
-
-        .submit-answer-btn:hover:not(:disabled) {
-            transform: translateY(-1px);
-            filter: brightness(1.04);
-            box-shadow: 0 22px 36px rgba(107, 33, 95, 0.28);
-        }
-
-        .submit-answer-btn:disabled {
-            opacity: 0.62;
-            cursor: not-allowed;
-            box-shadow: none;
-            filter: saturate(0.82);
-        }
-
         .theme-input {
             border: 1px solid rgba(148, 64, 112, 0.18);
             background: rgba(255, 255, 255, 0.82);
@@ -741,13 +710,6 @@
                 font-size: 1rem;
             }
 
-            .submit-answer-btn {
-                width: 100%;
-                min-height: 3.4rem;
-                padding-inline: 1.2rem;
-                font-size: 0.78rem;
-            }
-
             .active-clue-badge {
                 min-width: 0;
                 font-size: 0.68rem;
@@ -895,11 +857,6 @@
                             <p class="text-[10px] uppercase font-extrabold tracking-[0.24em] text-[var(--wm-muted)]">Progress</p>
                             <p class="text-xl font-black text-[var(--wm-ink)]"><span id="found-count">0</span>/<span id="total-count">6</span></p>
                         </div>
-                        <button onclick="exitGame()" class="group rounded-full border border-[rgba(148,64,112,0.16)] bg-white/80 p-3 text-[var(--wm-muted)] transition-colors duration-300 hover:text-rose-600" type="button" aria-label="Exit game">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 transform group-hover:-translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                            </svg>
-                        </button>
                     </div>
                 </div>
 
@@ -942,9 +899,6 @@
                                 <div class="flex w-full lg:w-auto flex-col sm:flex-row items-stretch sm:items-center gap-2 lg:shrink-0">
                                     <button id="test-layout-btn" type="button" class="hidden w-full sm:w-auto rounded-full border border-[rgba(148,64,112,0.14)] bg-white/80 px-4 py-2 text-xs font-extrabold uppercase tracking-[0.22em] text-[var(--wm-orchid)] transition hover:border-[rgba(148,64,112,0.28)]">
                                         Next Layout
-                                    </button>
-                                    <button id="check-puzzle-btn" type="button" class="submit-answer-btn w-full sm:w-auto">
-                                        Submit Answer
                                     </button>
                                     <button id="toggle-direction-btn" type="button" class="w-full sm:w-auto rounded-full border border-[rgba(148,64,112,0.14)] bg-white/80 px-4 py-2 text-xs font-extrabold uppercase tracking-[0.22em] text-[var(--wm-orchid)] transition hover:border-[rgba(148,64,112,0.28)] disabled:opacity-50 disabled:cursor-not-allowed">
                                         Direction: Across
@@ -996,7 +950,7 @@
     </div>
 
     <script>
-        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxlx85-4skPjoAqmFzW-_e79Nf6P6I5B359fuslnta-WydIuhTSgOZq8wwazzBQKyfu3w/exec";
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxhP4UeWgssjrtHP_yF6FJpgT6RAFQMVy6eZXWv2LhFjQU_mwWiW6hWUn4fB_EJJaSe8g/exec";
         const TEST_MODE = false;
         const TEST_MODE_QUERY = new URLSearchParams(window.location.search).get('test');
         const IS_TEST_MODE = TEST_MODE || TEST_MODE_QUERY === '1' || TEST_MODE_QUERY === 'true';
@@ -1010,7 +964,7 @@
         const GUIDED_BOARD_NUDGE_X_MS = 520;
         const GUIDED_BOARD_PAUSE_MS = 220;
         const GUIDED_BOARD_NUDGE_PX = 92;
-        const LEADERBOARD_LIMIT = 4;
+        const LEADERBOARD_LIMIT = 6;
         const LEADERBOARD_POLL_INTERVAL_MS = 15000;
         const WORD_BANK = Object.freeze({
             wm01: {
@@ -1260,7 +1214,6 @@
         const totalCount = document.getElementById('total-count');
         const returnHomeBtn = document.getElementById('return-home-btn');
         const startBtn = document.getElementById('start-btn');
-        const checkPuzzleBtn = document.getElementById('check-puzzle-btn');
         const activeClueText = document.getElementById('active-clue-text');
         const activeClueBadge = document.getElementById('active-clue-badge');
         const activeClueMeta = document.getElementById('active-clue-meta');
@@ -1288,6 +1241,7 @@
         let wordValidationRequestCounter = 0;
         let wordValidationRequestIds = {};
         let currentUser = { name: '', email: '', office: '' };
+        let currentAttemptId = '';
         let startTime = null;
         let timerInterval = null;
         let elapsedSeconds = 0;
@@ -1296,6 +1250,7 @@
         let pendingCellPointerDown = null;
         let hasCompletedPuzzle = false;
         let isSubmittingPuzzle = false;
+        let isStartingParticipantAttempt = false;
         let isCheckingParticipantEmail = false;
         let isDuplicateParticipantEmail = false;
         let isParticipantEmailVerified = false;
@@ -1306,6 +1261,7 @@
         let starterCellOrder = [];
         let clueOrderByWordKey = {};
         let lastSubmissionFingerprint = '';
+        let autoSubmitTimeoutId = null;
         let modalActionType = 'exit';
         let requiresManualCheck = false;
         let leaderboardEntries = [];
@@ -1330,7 +1286,6 @@
         updateTestLayoutButton();
 
         toggleDirectionBtn.addEventListener('click', toggleActiveDirection);
-        checkPuzzleBtn.addEventListener('click', handleCheckPuzzleClick);
         testLayoutBtn.addEventListener('click', cycleTestPuzzleLayout);
         returnHomeBtn.addEventListener('click', handleModalAction);
         emailInput.addEventListener('input', handleParticipantEmailInput);
@@ -1338,7 +1293,7 @@
         nameInput.addEventListener('input', updateStartButtonState);
         window.addEventListener('resize', applyResponsiveGridSizing);
 
-        document.getElementById('onboarding-form').addEventListener('submit', (event) => {
+        document.getElementById('onboarding-form').addEventListener('submit', async (event) => {
             event.preventDefault();
 
             const participantName = nameInput.value.trim();
@@ -1363,19 +1318,64 @@
                 return;
             }
 
-            currentUser.name = participantName;
-            currentUser.email = participantEmail;
-            currentUser.office = participantOffice;
-            const layoutId = getRandomPuzzleLayoutId(lastStartedLayoutId);
-            lastStartedLayoutId = layoutId;
-            selectPuzzleLayout(layoutId);
+            currentUser = {
+                name: participantName,
+                email: participantEmail,
+                office: participantOffice
+            };
+            currentAttemptId = createAttemptId();
+            isStartingParticipantAttempt = true;
+            setEmailCheckStatus('checking', 'Please wait while we reserve your one allowed attempt...');
+            updateStartButtonState();
 
-            syncUserDisplay();
-            launchGame();
+            try {
+                const payload = await registerParticipantAttempt();
+                if (payload.status === 'duplicate') {
+                    isDuplicateParticipantEmail = true;
+                    isParticipantEmailVerified = false;
+                    currentAttemptId = '';
+                    setEmailCheckStatus('duplicate', 'This email has already used the one allowed attempt.');
+                    emailInput.focus({ preventScroll: true });
+                    return;
+                }
+
+                if (payload.status !== 'success') {
+                    throw new Error(payload.message || 'Unable to start the crossword right now.');
+                }
+
+                const layoutId = getRandomPuzzleLayoutId(lastStartedLayoutId);
+                lastStartedLayoutId = layoutId;
+                selectPuzzleLayout(layoutId);
+                syncUserDisplay();
+                launchGame();
+            } catch (error) {
+                currentAttemptId = '';
+                setEmailCheckStatus('error', error.message || 'Unable to start the crossword right now.');
+            } finally {
+                isStartingParticipantAttempt = false;
+                updateStartButtonState();
+            }
         });
 
         function normalizeParticipantEmail(email) {
             return email.trim().toLowerCase();
+        }
+
+        function createAttemptId() {
+            if (window.crypto?.randomUUID) {
+                return window.crypto.randomUUID();
+            }
+
+            const parts = new Uint32Array(3);
+            if (window.crypto?.getRandomValues) {
+                window.crypto.getRandomValues(parts);
+            } else {
+                for (let index = 0; index < parts.length; index += 1) {
+                    parts[index] = Math.floor(Math.random() * 0x100000000);
+                }
+            }
+
+            return `${Date.now().toString(36)}-${Array.from(parts, part => part.toString(16).padStart(8, '0')).join('')}`;
         }
 
         function isValidParticipantEmail(email) {
@@ -1406,7 +1406,14 @@
             const hasName = nameInput.value.trim().length > 0;
             const hasEmail = emailInput.value.trim().length > 0;
             const hasOffice = officeInput.value.trim().length > 0;
-            startBtn.disabled = !hasName || !hasEmail || !hasOffice || isCheckingParticipantEmail || isDuplicateParticipantEmail || !isParticipantEmailVerified;
+            startBtn.disabled = !hasName
+                || !hasEmail
+                || !hasOffice
+                || isCheckingParticipantEmail
+                || isStartingParticipantAttempt
+                || isDuplicateParticipantEmail
+                || !isParticipantEmailVerified;
+            startBtn.textContent = isStartingParticipantAttempt ? 'Starting...' : 'Begin Crossword';
         }
 
         function escapeHtml(value) {
@@ -1827,7 +1834,7 @@
                     return { status: 'duplicate', payload };
                 }
 
-                setEmailCheckStatus('available', 'Email Verified. You can start the crossword challenge!');
+                setEmailCheckStatus('available', 'Email verified. Starting the crossword will consume the one allowed attempt.');
                 updateStartButtonState();
                 return { status: 'available', payload };
             } catch (error) {
@@ -1842,6 +1849,26 @@
                 updateStartButtonState();
                 return { status: 'error', error };
             }
+        }
+
+        async function registerParticipantAttempt() {
+            if (IS_LOCAL_MODE) {
+                return { status: 'success' };
+            }
+
+            return requestScriptJson(SCRIPT_URL, {
+                method: 'POST',
+                mode: 'cors',
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                body: JSON.stringify({
+                    action: 'startAttempt',
+                    attemptId: currentAttemptId,
+                    name: currentUser.name,
+                    email: currentUser.email,
+                    normalizedEmail: normalizeParticipantEmail(currentUser.email),
+                    office: currentUser.office
+                })
+            });
         }
 
         function syncUserDisplay() {
@@ -2603,6 +2630,43 @@
             }
         }
 
+        function clearPendingAutoSubmit() {
+            if (autoSubmitTimeoutId !== null) {
+                clearTimeout(autoSubmitTimeoutId);
+                autoSubmitTimeoutId = null;
+            }
+        }
+
+        function canAutoSubmitPuzzle() {
+            return puzzleWords.length > 0
+                && completedWords.size === puzzleWords.length
+                && lockedWordKeys.size === puzzleWords.length
+                && !hasCompletedPuzzle
+                && !isSubmittingPuzzle;
+        }
+
+        function scheduleAutoSubmitIfReady() {
+            if (!canAutoSubmitPuzzle()) {
+                clearPendingAutoSubmit();
+                return;
+            }
+
+            if (autoSubmitTimeoutId !== null) {
+                return;
+            }
+
+            autoSubmitTimeoutId = window.setTimeout(() => {
+                autoSubmitTimeoutId = null;
+
+                if (!canAutoSubmitPuzzle()) {
+                    return;
+                }
+
+                requiresManualCheck = false;
+                submitCompletedPuzzle();
+            }, 0);
+        }
+
         async function validateCompletedWord(word) {
             if (!word || isWordLocked(word) || !isWordComplete(word)) return;
 
@@ -2620,6 +2684,7 @@
                 if (activeCellKey !== previousActiveKey) {
                     focusActiveCell(true);
                 }
+                scheduleAutoSubmitIfReady();
                 return;
             }
 
@@ -2657,6 +2722,7 @@
                         if (activeCellKey !== previousActiveKey) {
                             focusActiveCell(true);
                         }
+                        scheduleAutoSubmitIfReady();
                     }
                 }
             } catch (error) {
@@ -2706,6 +2772,7 @@
 
             const state = {
                 user: currentUser,
+                attemptId: currentAttemptId,
                 layoutId: currentLayoutId,
                 starterCellOrder,
                 clueOrderByWordKey,
@@ -2741,6 +2808,9 @@
                     email: String(state.user.email),
                     office: String(state.user.office)
                 };
+                currentAttemptId = typeof state.attemptId === 'string' && state.attemptId.trim()
+                    ? state.attemptId.trim()
+                    : createAttemptId();
                 const restoredLayoutId = typeof state.layoutId === 'string' ? state.layoutId : DEFAULT_PUZZLE_LAYOUT_ID;
                 starterCellOrder = Array.isArray(state.starterCellOrder)
                     ? state.starterCellOrder.filter(key => typeof key === 'string')
@@ -2894,25 +2964,10 @@
             exitGame();
         }
 
-        function updateCheckPuzzleButtonState() {
-            const isPuzzleComplete = completedWords.size === puzzleWords.length;
-            const canSubmitPuzzle = isPuzzleComplete && !isSubmittingPuzzle && !hasCompletedPuzzle;
-
-            checkPuzzleBtn.disabled = !canSubmitPuzzle;
-            checkPuzzleBtn.textContent = isSubmittingPuzzle
-                ? 'Submitting...'
-                : 'Submit Answer';
-        }
-
-        function handleCheckPuzzleClick() {
-            if (checkPuzzleBtn.disabled) return;
-
-            requiresManualCheck = false;
-            submitCompletedPuzzle(true);
-        }
-
         function submitCompletedPuzzle(force = false) {
             const submissionFingerprint = getSubmissionFingerprint();
+
+            clearPendingAutoSubmit();
 
             if (!submissionFingerprint || completedWords.size !== puzzleWords.length || hasCompletedPuzzle || isSubmittingPuzzle) {
                 return;
@@ -2973,6 +3028,7 @@
             }
 
             const data = {
+                attemptId: currentAttemptId,
                 name: currentUser.name,
                 email: currentUser.email,
                 normalizedEmail: normalizeParticipantEmail(currentUser.email),
@@ -3038,6 +3094,7 @@
 
         function initGame() {
             cancelGuidedBoardIntro({ reset: true });
+            clearPendingAutoSubmit();
             userEntries = {};
             completedWords = new Set();
             lockedWordKeys = new Set();
@@ -3062,7 +3119,6 @@
             renderGrid();
             renderWordRevealCard();
             updateActiveClueDisplay();
-            updateCheckPuzzleButtonState();
             foundCount.textContent = lockedWordKeys.size.toString();
             saveGameState();
 
@@ -3460,8 +3516,11 @@
 
             if (completedWords.size !== puzzleWords.length) {
                 lastSubmissionFingerprint = '';
+                clearPendingAutoSubmit();
                 return;
             }
+
+            scheduleAutoSubmitIfReady();
         }
 
         function exitGame() {
@@ -3470,6 +3529,7 @@
             clearInterval(timerInterval);
             cancelGuidedBoardIntro({ reset: true });
             stopActiveClueRotation();
+            clearPendingAutoSubmit();
             timerDisplay.textContent = '00:00';
             elapsedSeconds = 0;
             startTime = null;
@@ -3488,6 +3548,7 @@
             lastSubmissionFingerprint = '';
             requiresManualCheck = false;
             currentUser = { name: '', email: '', office: '' };
+            currentAttemptId = '';
             syncUserDisplay();
             clearSavedGameState();
             modal.classList.remove('flex');
@@ -3498,6 +3559,7 @@
             document.getElementById('onboarding-form').reset();
             clearTimeout(participantEmailCheckTimeout);
             participantEmailCheckToken += 1;
+            isStartingParticipantAttempt = false;
             isCheckingParticipantEmail = false;
             isDuplicateParticipantEmail = false;
             isParticipantEmailVerified = false;
