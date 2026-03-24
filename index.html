@@ -966,6 +966,7 @@
         const GUIDED_BOARD_NUDGE_PX = 92;
         const LEADERBOARD_LIMIT = 6;
         const LEADERBOARD_POLL_INTERVAL_MS = 15000;
+        const ATTEMPT_HEARTBEAT_INTERVAL_MS = 10000;
         const WORD_BANK = Object.freeze({
             wm01: {
                 clues: [
@@ -1248,6 +1249,8 @@
         let activeCellKey = null;
         let activeDirection = 'across';
         let pendingCellPointerDown = null;
+        let attemptHeartbeatTimer = null;
+        let isSendingAttemptHeartbeat = false;
         let hasCompletedPuzzle = false;
         let isSubmittingPuzzle = false;
         let isStartingParticipantAttempt = false;
@@ -1871,6 +1874,72 @@
             });
         }
 
+        function shouldSendAttemptHeartbeat() {
+            return !IS_LOCAL_MODE
+                && Boolean(currentAttemptId)
+                && Boolean(currentUser.email)
+                && !hasCompletedPuzzle
+                && (gameScreen.classList.contains('active') || introScreen.classList.contains('exit'));
+        }
+
+        function stopAttemptHeartbeat() {
+            if (attemptHeartbeatTimer !== null) {
+                clearInterval(attemptHeartbeatTimer);
+                attemptHeartbeatTimer = null;
+            }
+        }
+
+        async function sendAttemptHeartbeat() {
+            if (!shouldSendAttemptHeartbeat() || isSendingAttemptHeartbeat) {
+                return;
+            }
+
+            const heartbeatAttemptId = currentAttemptId;
+            const normalizedEmail = normalizeParticipantEmail(currentUser.email);
+            isSendingAttemptHeartbeat = true;
+
+            try {
+                const payload = await requestScriptJson(SCRIPT_URL, {
+                    method: 'POST',
+                    mode: 'cors',
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    body: JSON.stringify({
+                        action: 'heartbeatAttempt',
+                        attemptId: heartbeatAttemptId,
+                        email: currentUser.email,
+                        normalizedEmail
+                    })
+                });
+
+                if (currentAttemptId !== heartbeatAttemptId) {
+                    return;
+                }
+
+                if (payload.attemptStatus === 'completed' || payload.status === 'duplicate') {
+                    stopAttemptHeartbeat();
+                }
+            } catch (error) {
+            } finally {
+                isSendingAttemptHeartbeat = false;
+            }
+        }
+
+        function startAttemptHeartbeat() {
+            if (!shouldSendAttemptHeartbeat()) {
+                stopAttemptHeartbeat();
+                return;
+            }
+
+            if (attemptHeartbeatTimer !== null) {
+                return;
+            }
+
+            sendAttemptHeartbeat();
+            attemptHeartbeatTimer = window.setInterval(() => {
+                sendAttemptHeartbeat();
+            }, ATTEMPT_HEARTBEAT_INTERVAL_MS);
+        }
+
         function syncUserDisplay() {
             document.getElementById('display-name').textContent = currentUser.name || 'Guest';
             document.getElementById('display-office').textContent = currentUser.office || 'Office';
@@ -2010,6 +2079,7 @@
                 gameScreen.classList.add('active');
                 renderGame({ focus: false });
                 startTimer();
+                startAttemptHeartbeat();
                 runGuidedBoardIntro();
             }, 500);
         }
@@ -2871,6 +2941,7 @@
                 startTimer(Number.isFinite(state.startTime) ? state.startTime : Date.now());
                 updateWordProgress();
                 renderGame({ select: true });
+                startAttemptHeartbeat();
             } catch (error) {
                 clearSavedGameState();
             }
@@ -3015,6 +3086,7 @@
                 hasCompletedPuzzle = true;
                 isSubmittingPuzzle = false;
                 lockedWordKeys = new Set(puzzleWords.map(word => word.wordKey));
+                stopAttemptHeartbeat();
                 clearSavedGameState();
                 setModalState('success');
                 submitStatusText.textContent = IS_TEST_MODE
@@ -3074,6 +3146,7 @@
                 isSubmittingPuzzle = false;
                 lockedWordKeys = new Set(puzzleWords.map(word => word.wordKey));
                 invalidWordKeys = new Set();
+                stopAttemptHeartbeat();
                 clearSavedGameState();
                 setModalState('success');
                 submitStatusText.textContent = 'Answers verified and sent successfully. Thank you for participating.';
@@ -3094,6 +3167,7 @@
 
         function initGame() {
             cancelGuidedBoardIntro({ reset: true });
+            stopAttemptHeartbeat();
             clearPendingAutoSubmit();
             userEntries = {};
             completedWords = new Set();
@@ -3529,6 +3603,7 @@
             clearInterval(timerInterval);
             cancelGuidedBoardIntro({ reset: true });
             stopActiveClueRotation();
+            stopAttemptHeartbeat();
             clearPendingAutoSubmit();
             timerDisplay.textContent = '00:00';
             elapsedSeconds = 0;
